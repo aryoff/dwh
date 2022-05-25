@@ -1,6 +1,8 @@
 /node_modules
-/public/hot
-/public/storage
+Modules/*
+!/Modules/.gitkeep
+public/*/
+public/mix-manifest.json
 /storage/*.key
 /vendor
 .env
@@ -8,7 +10,9 @@
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
+modules_statuses.json
 npm-debug.log
 yarn-error.log
+debug.log
 /.idea
 /.vscode
