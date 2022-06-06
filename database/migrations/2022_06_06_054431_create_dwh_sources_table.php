@@ -13,12 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('dwh_customer', function (Blueprint $table) {
+        Schema::create('dwh_sources', function (Blueprint $table) {
             $table->id();
-            //TODO unique id pelanggan (simduk?)
-            //TODO data diri pelanggan
-            //TODO trigger perubahan data pelanggan
-            //TODO pelanggan bisa dibedakan masuk untuk layanan apa ???
+            $table->string('name');
+            if (env('DB_CONNECTION', false) == 'pgsql') {
+                $table->jsonb('parameter')->default('{}');
+            } else {
+                $table->json('parameter')->default('{}');
+            }
             $table->timestamps();
         });
     }
@@ -30,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('dwh_customer');
+        Schema::dropIfExists('dwh_sources');
     }
 };
