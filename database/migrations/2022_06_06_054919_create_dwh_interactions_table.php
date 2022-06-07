@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('dwh_interactions', function (Blueprint $table) {
             $table->id();
             //TODO id customer
-            $table->foreignId('dwh_source_id')->index()->constrained()->onDelete('CASCADE'); //sumber data (index?)
+            $table->foreignId('dwh_source_id')->index()->constrained(); //sumber data (index?)
             //TODO sumber data {channel} interaksi (indexed)
             if (env('DB_CONNECTION', false) == 'pgsql') {
                 $table->jsonb('data')->default('{}'); //data interaksi
