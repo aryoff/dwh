@@ -38,7 +38,8 @@ class ApiController extends Controller
 
             try {
                 $id = Crypt::decryptString($request->id);
-                $ip = $request->ip();
+                // $ip = $request->ip();
+                $ip = "10.194.5.20";
                 $header = '';
                 if ($request->hasHeader('Authorization')) {
                     $header = $request->header('Authorization');
