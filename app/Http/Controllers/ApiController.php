@@ -37,48 +37,48 @@ class ApiController extends Controller
             //HACK logging temp
             $response->status = 'success';
 
-            // try {
-            //     $id = Crypt::decrypt($request->id);
-            //     // $ip = $request->ip();
-            //     $ip = "10.194.5.20";
-            //     $header = '';
-            //     if ($request->hasHeader('Authorization')) {
-            //         $header = $request->header('Authorization');
-            //         $header = base64_decode(substr($header, 6, strlen($header) - 6));
-            //     }
-            //     // $username = substr($header, 0, strpos($header, ':'));
-            //     // $password = substr($header, strpos($header, ':') + 1, strlen($header) - strpos($header, ':') + 1);
-            //     $username = 'syifa';
-            //     $password = 'infomedia';
-            //     $source = DB::select("SELECT parameter FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND parameter @> jsonb_build_object('username',username) AND parameter @> jsonb_build_object('password',password) AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip, 'username' => $username, 'password' => $password]);
-            //     if (count($source) === 1) {
-            //         $parameter = json_decode($source[0]->parameter);
-            //         try {
-            //             $insert_data = new \stdClass;
-            //             $insert_data->source_id = $id;
-            //             $callback_data = $request->interaksi;
-            //             try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
-            //                 foreach ($parameter->field as $field) {
-            //                     $insert_data->{$field->target} = $callback_data->{$field->source};
-            //                 }
-            //                 try {
-            //                     DB::insert("INSERT INTO dwh_interactions(dwh_source_id,data) VALUES (:id,:data)", ['id' => $id, 'data' => json_encode($insert_data)]);
-            //                 } catch (QueryException $qe) {
-            //                     Storage::append('ApiFailedInputInteraction.log', json_encode($insert_data));
-            //                 }
-            //             } catch (Exception $e) { //kalau field nya ada yg salah, maka akan masuk ke dump failed
-            //                 $callback_data->source_id = $id;
-            //                 Storage::append('ApiFailedInputInteraction.log', json_encode($callback_data));
-            //             }
-            //         } catch (Exception $e) {
-            //             $response->status = 'No Interaction Data';
-            //         }
-            //     } else {
-            //         $response->status = 'source select failed';
-            //     }
-            // } catch (DecryptException $de) {
-            //     $response->status = 'decrypt failed';
-            // }
+            try {
+                $id = Crypt::decrypt($request->id);
+                // $ip = $request->ip();
+                $ip = "10.194.5.20";
+                $header = '';
+                if ($request->hasHeader('Authorization')) {
+                    $header = $request->header('Authorization');
+                    $header = base64_decode(substr($header, 6, strlen($header) - 6));
+                }
+                // $username = substr($header, 0, strpos($header, ':'));
+                // $password = substr($header, strpos($header, ':') + 1, strlen($header) - strpos($header, ':') + 1);
+                $username = 'syifa';
+                $password = 'infomedia';
+                $source = DB::select("SELECT parameter FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND parameter @> jsonb_build_object('username',username) AND parameter @> jsonb_build_object('password',password) AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip, 'username' => $username, 'password' => $password]);
+                if (count($source) === 1) {
+                    //     $parameter = json_decode($source[0]->parameter);
+                    //     try {
+                    //         $insert_data = new \stdClass;
+                    //         $insert_data->source_id = $id;
+                    //         $callback_data = $request->interaksi;
+                    //         try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
+                    //             foreach ($parameter->field as $field) {
+                    //                 $insert_data->{$field->target} = $callback_data->{$field->source};
+                    //             }
+                    //             try {
+                    //                 DB::insert("INSERT INTO dwh_interactions(dwh_source_id,data) VALUES (:id,:data)", ['id' => $id, 'data' => json_encode($insert_data)]);
+                    //             } catch (QueryException $qe) {
+                    //                 Storage::append('ApiFailedInputInteraction.log', json_encode($insert_data));
+                    //             }
+                    //         } catch (Exception $e) { //kalau field nya ada yg salah, maka akan masuk ke dump failed
+                    //             $callback_data->source_id = $id;
+                    //             Storage::append('ApiFailedInputInteraction.log', json_encode($callback_data));
+                    //         }
+                    //     } catch (Exception $e) {
+                    //         $response->status = 'No Interaction Data';
+                    //     }
+                } else {
+                    $response->status = 'source select failed';
+                }
+            } catch (DecryptException $de) {
+                $response->status = 'decrypt failed';
+            }
         } catch (Exception $e) {
             $response->status = 'failed';
         }
