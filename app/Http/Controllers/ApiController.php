@@ -40,7 +40,7 @@ class ApiController extends Controller
         try {
             $incomingRequest = (object) $request->all();
             Storage::append('ApiInputInteraction.log', json_encode($incomingRequest->data));
-            $id = Crypt::decrypt($request->id);
+            $id = Crypt::decrypt($incomingRequest->id);
             $ip = $request->ip();
             $header = '';
             if ($request->hasHeader(AUTHORIZATION)) {
@@ -55,7 +55,7 @@ class ApiController extends Controller
                 try {
                     $insert_data = new \stdClass;
                     $insert_data->source_id = $id;
-                    $callback_data = (object) $request->interaksi;
+                    $callback_data = $incomingRequest->interaksi;
                     try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
                         foreach ($parameter->field as $field) {
                             $insert_data->{$field->target} = $callback_data->{$field->source};
@@ -78,7 +78,7 @@ class ApiController extends Controller
             }
         } catch (DecryptException $decryptErr) { //Decryption failed
             $response->status = FAILED;
-            Storage::append('ApiInputInteraction.log', 'Descrypt FAILED');
+            Storage::append('ApiInputInteraction.log', 'Decrypt FAILED');
         }
         return $response;
     }
