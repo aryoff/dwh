@@ -38,7 +38,7 @@ class ApiController extends Controller
         $response->status = 'success';
 
         try {
-            $id = Crypt::decrypt($request->id);
+            $id = Crypt::decrypt((object) $request->id);
             $ip = $request->ip();
             $header = '';
             if ($request->hasHeader(AUTHORIZATION)) {
