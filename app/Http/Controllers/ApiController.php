@@ -37,7 +37,7 @@ class ApiController extends Controller
             //HACK logging temp
 
             try {
-                $id = Crypt::decryptString($request->id);
+                $id = Crypt::decrypt($request->id);
                 // $ip = $request->ip();
                 $ip = "10.194.5.20";
                 $header = '';
