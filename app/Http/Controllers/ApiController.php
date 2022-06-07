@@ -71,6 +71,7 @@ class ApiController extends Controller
                     }
                 } catch (Exception $noInteractionDataErr) { //Interaction key not found on request body
                     $response->status = 'No Interaction Data';
+                    Storage::append('ApiInputInteraction.log', 'No Interaction Data');
                 }
             } else { //Source select failed
                 $response->status = FAILED;
