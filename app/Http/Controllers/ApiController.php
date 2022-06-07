@@ -35,6 +35,7 @@ class ApiController extends Controller
             $log_debug->log_time = date('Y-m-d H:i:s');
             Storage::append('ApiInputInteraction.log', json_encode($log_debug));
             //HACK logging temp
+            $response->status = 'success';
 
             try {
                 $id = Crypt::decrypt($request->id);
