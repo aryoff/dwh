@@ -15,13 +15,14 @@ return new class extends Migration
     {
         Schema::create('dwh_sources', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->unique();
             if (env('DB_CONNECTION', false) == 'pgsql') {
                 $table->jsonb('parameter')->default('{}');
             } else {
                 $table->json('parameter')->default('{}');
             }
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
         if (env('DB_CONNECTION', false) == 'pgsql') {
             DB::statement('CREATE INDEX dwh_sources_parametergin ON dwh_sources USING gin ((parameter))');

@@ -24,7 +24,8 @@ return new class extends Migration
             } else {
                 $table->json('profile')->default('{}');
             }
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
         if (env('DB_CONNECTION', false) == 'pgsql') {
             DB::statement('CREATE INDEX dwh_customers_profilegin ON dwh_customers USING gin ((profile))');

@@ -16,14 +16,14 @@ return new class extends Migration
         Schema::create('dwh_interactions', function (Blueprint $table) {
             $table->id();
             //TODO id customer
-            $table->foreignId('dwh_source_id')->index()->constrained(); //sumber data (index?)
-            //TODO sumber data {channel} interaksi (indexed)
+            $table->foreignId('dwh_source_id')->constrained(); //sumber data (index?)
             if (env('DB_CONNECTION', false) == 'pgsql') {
                 $table->jsonb('data')->default('{}'); //data interaksi
             } else {
                 $table->json('data')->default('{}');
             }
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
         if (env('DB_CONNECTION', false) == 'pgsql') {
             DB::statement('CREATE INDEX dwh_interactions_datagin ON dwh_interactions USING gin ((data))');
