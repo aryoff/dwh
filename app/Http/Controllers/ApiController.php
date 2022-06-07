@@ -50,6 +50,7 @@ class ApiController extends Controller
                 // $password = substr($header, strpos($header, ':') + 1, strlen($header) - strpos($header, ':') + 1);
                 $username = 'syifa';
                 $password = 'infomedia';
+                $response->status = $id;
                 // $source = DB::select("SELECT parameter FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND parameter @> jsonb_build_object('username',username) AND parameter @> jsonb_build_object('password',password) AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip, 'username' => $username, 'password' => $password]);
                 // if (count($source) === 1) {
                 //     $parameter = json_decode($source[0]->parameter);
