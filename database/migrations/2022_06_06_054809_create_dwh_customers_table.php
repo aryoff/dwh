@@ -16,20 +16,18 @@ return new class extends Migration
         Schema::create('dwh_customers', function (Blueprint $table) {
             $table->id();
             //TODO unique id pelanggan (simduk?)
-            //TODO data diri pelanggan
             //TODO trigger perubahan data pelanggan
             //TODO pelanggan bisa dibedakan masuk untuk layanan apa ???
             //TODO data id sosmed / HP / email / Contact pelanggan
             if (env('DB_CONNECTION', false) == 'pgsql') {
-                $table->jsonb('parameter')->default('{}');
+                $table->jsonb('profile')->default('{}'); //data diri customer
             } else {
-                $table->json('parameter')->default('{}');
+                $table->json('profile')->default('{}');
             }
             $table->timestamps();
         });
         if (env('DB_CONNECTION', false) == 'pgsql') {
-            // DB::statement('CREATE INDEX dynamicticket_datas_datafieldgin ON dynamicticket_datas USING gin ((parameter->\'data\'))');
-            // DB::statement('CREATE INDEX dynamicticket_datas_statusgin ON dynamicticket_datas USING gin ((status))');
+            DB::statement('CREATE INDEX dwh_customers_profilegin ON dwh_customers USING gin ((profile))');
         }
     }
 

@@ -23,6 +23,9 @@ return new class extends Migration
             }
             $table->timestamps();
         });
+        if (env('DB_CONNECTION', false) == 'pgsql') {
+            DB::statement('CREATE INDEX dwh_sources_parametergin ON dwh_sources USING gin ((parameter))');
+        }
     }
 
     /**

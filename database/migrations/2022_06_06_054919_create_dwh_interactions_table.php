@@ -16,18 +16,17 @@ return new class extends Migration
         Schema::create('dwh_interactions', function (Blueprint $table) {
             $table->id();
             //TODO id customer
+            $table->foreignId('dwh_source_id')->index()->constrained()->onDelete('CASCADE'); //sumber data (index?)
             //TODO sumber data {channel} interaksi (indexed)
-            //TODO data interaksi
             if (env('DB_CONNECTION', false) == 'pgsql') {
-                $table->jsonb('parameter')->default('{}');
+                $table->jsonb('data')->default('{}'); //data interaksi
             } else {
-                $table->json('parameter')->default('{}');
+                $table->json('data')->default('{}');
             }
             $table->timestamps();
         });
         if (env('DB_CONNECTION', false) == 'pgsql') {
-            // DB::statement('CREATE INDEX dynamicticket_datas_datafieldgin ON dynamicticket_datas USING gin ((parameter->\'data\'))');
-            // DB::statement('CREATE INDEX dynamicticket_datas_statusgin ON dynamicticket_datas USING gin ((status))');
+            DB::statement('CREATE INDEX dwh_interactions_datagin ON dwh_interactions USING gin ((data))');
         }
     }
 
