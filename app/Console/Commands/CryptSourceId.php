@@ -32,9 +32,9 @@ class CryptSourceId extends Command
         $name = $this->ask('What is the source name?');
         $query = DB::select("SELECT id FROM dwh_sources WHERE name = ?", [$name]);
         if (count($query) === 1) {
-            return Crypt::encrypt($query[0]->id);
+            $this->line(Crypt::encrypt($query[0]->id));
         } else {
-            return 0;
+            $this->error('Source not found.');
         }
     }
 }
