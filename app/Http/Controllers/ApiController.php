@@ -33,13 +33,13 @@ class ApiController extends Controller
         $log_debug->source_ip = $request->ip();
         date_default_timezone_set('Asia/Jakarta');
         $log_debug->log_time = date('Y-m-d H:i:s');
+        Storage::append('ApiInputInteraction.log', json_encode($log_debug));
         //HACK logging temp
         $response->status = 'success';
 
         try {
             $id = Crypt::decrypt($request->id);
             $ip = $request->ip();
-            Storage::append('ApiInputInteraction.log', json_encode($log_debug));
             $header = '';
             if ($request->hasHeader(AUTHORIZATION)) {
                 $header = $request->header(AUTHORIZATION);
@@ -72,9 +72,11 @@ class ApiController extends Controller
                 }
             } else { //Source select failed
                 $response->status = FAILED;
+                Storage::append('ApiInputInteraction.log', 'Source Select FAILED');
             }
         } catch (DecryptException $decryptErr) { //Decryption failed
             $response->status = FAILED;
+            Storage::append('ApiInputInteraction.log', 'Descrypt FAILED');
         }
         return $response;
     }
