@@ -73,10 +73,10 @@ class ApiController extends Controller
                         $response->status = 'No Interaction Data';
                     }
                 } else {
-                    $response->status = 'failed';
+                    $response->status = 'source select failed';
                 }
             } catch (DecryptException $de) {
-                $response->status = 'failed';
+                $response->status = 'decrypt failed';
             }
         } catch (Exception $e) {
             $response->status = 'failed';
