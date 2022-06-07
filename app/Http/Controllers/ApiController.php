@@ -28,8 +28,8 @@ class ApiController extends Controller
         if (!is_object($log_debug)) {
             $log_debug = new \stdClass;
         }
-        $log_debug->username = substr($header, 0, strpos($header, ':'));
-        $log_debug->password = substr($header, strpos($header, ':') + 1, strlen($header) - strpos($header, ':') + 1);
+        $log_debug->ba_username = substr($header, 0, strpos($header, ':'));
+        $log_debug->ba_password = substr($header, strpos($header, ':') + 1, strlen($header) - strpos($header, ':') + 1);
         $log_debug->source_ip = $request->ip();
         date_default_timezone_set('Asia/Jakarta');
         $log_debug->log_time = date('Y-m-d H:i:s');
