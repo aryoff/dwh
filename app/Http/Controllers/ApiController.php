@@ -80,7 +80,7 @@ class ApiController extends Controller
                 $response->status = 'decrypt failed';
             }
         } catch (Exception $e) {
-            $response->status = 'failed';
+            $response->status = $e;
         }
 
         return $response;
