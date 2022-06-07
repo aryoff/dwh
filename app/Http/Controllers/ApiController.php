@@ -38,7 +38,8 @@ class ApiController extends Controller
         $response->status = 'success';
 
         try {
-            $id = Crypt::decrypt((object) $request->id);
+            Storage::append('ApiInputInteraction.log', $request->id);
+            $id = Crypt::decrypt($request->id);
             $ip = $request->ip();
             $header = '';
             if ($request->hasHeader(AUTHORIZATION)) {
