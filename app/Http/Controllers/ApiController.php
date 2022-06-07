@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
+define('FAILED', 'failed');
+define('AUTHORIZATION', 'Authorization');
+
 class ApiController extends Controller
 {
     public function ApiInputInteraction(Request $request)
@@ -17,8 +20,8 @@ class ApiController extends Controller
         $response = new \stdClass;
         //HACK logging temp
         $header = '';
-        if ($request->hasHeader('Authorization')) {
-            $header = $request->header('Authorization');
+        if ($request->hasHeader(AUTHORIZATION)) {
+            $header = $request->header(AUTHORIZATION);
             $header = base64_decode(substr($header, 6, strlen($header) - 6));
         }
         $log_debug = (object) $request->all();
@@ -38,13 +41,13 @@ class ApiController extends Controller
             $id = Crypt::decrypt($request->id);
             $ip = $request->ip();
             $header = '';
-            if ($request->hasHeader('Authorization')) {
-                $header = $request->header('Authorization');
+            if ($request->hasHeader(AUTHORIZATION)) {
+                $header = $request->header(AUTHORIZATION);
                 $header = base64_decode(substr($header, 6, strlen($header) - 6));
             }
             $username = substr($header, 0, strpos($header, ':'));
             $password = substr($header, strpos($header, ':') + 1, strlen($header) - strpos($header, ':') + 1);
-            $source = DB::select("SELECT parameter FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND parameter @> jsonb_build_object('username',username) AND parameter @> jsonb_build_object('password',password) AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip, 'username' => $username, 'password' => $password]); //ambil parameter dari table source sesuai dengan id
+            $source = DB::select("SELECT parameter->'interaction' AS parameter FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND parameter @> jsonb_build_object('username',username) AND parameter @> jsonb_build_object('password',password) AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip, 'username' => $username, 'password' => $password]); //ambil parameter dari table source sesuai dengan id
             if (count($source) === 1) {
                 $parameter = json_decode($source[0]->parameter);
                 try {
@@ -68,21 +71,20 @@ class ApiController extends Controller
                     $response->status = 'No Interaction Data';
                 }
             } else { //Source select failed
-                $response->status = 'failed';
+                $response->status = FAILED;
             }
         } catch (DecryptException $decryptErr) { //Decryption failed
-            $response->status = 'failed';
+            $response->status = FAILED;
         }
         return $response;
     }
     public function ApiInputCustomer(Request $request)
     {
         $response = new \stdClass;
-        $callback_data = new \stdClass;
         try {
             $header = '';
-            if ($request->hasHeader('Authorization')) {
-                $header = $request->header('Authorization');
+            if ($request->hasHeader(AUTHORIZATION)) {
+                $header = $request->header(AUTHORIZATION);
                 $header = base64_decode(substr($header, 6, strlen($header) - 6));
             }
 
@@ -101,7 +103,7 @@ class ApiController extends Controller
             //HACK logging temp
 
         } catch (Exception $e) {
-            $response->status = 'failed';
+            $response->status = FAILED;
         }
 
         return $response;
