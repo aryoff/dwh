@@ -38,7 +38,8 @@ class ApiController extends Controller
         $response->status = 'success';
 
         try {
-            Storage::append('ApiInputInteraction.log', json_encode((object) $request->all()));
+            $incomingRequest = (object) $request->all();
+            Storage::append('ApiInputInteraction.log', json_encode($incomingRequest->data));
             $id = Crypt::decrypt($request->id);
             $ip = $request->ip();
             $header = '';
