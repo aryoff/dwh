@@ -33,23 +33,20 @@ class ApiController extends Controller
         $log_debug->source_ip = $request->ip();
         date_default_timezone_set('Asia/Jakarta');
         $log_debug->log_time = date('Y-m-d H:i:s');
-        Storage::append('ApiInputInteraction.log', json_encode($log_debug));
         //HACK logging temp
         $response->status = 'success';
 
         try {
             $id = Crypt::decrypt($request->id);
             $ip = $request->ip();
-            $ip = "10.194.5.20";
+            Storage::append('ApiInputInteraction.log', json_encode($log_debug));
             $header = '';
             if ($request->hasHeader(AUTHORIZATION)) {
                 $header = $request->header(AUTHORIZATION);
                 $header = base64_decode(substr($header, 6, strlen($header) - 6));
             }
             $username = substr($header, 0, strpos($header, ':'));
-            $username = "risma";
             $password = substr($header, strpos($header, ':') + 1, strlen($header) - strpos($header, ':') + 1);
-            $password = "infomedia";
             $source = DB::select("SELECT parameter->'interaction' AS parameter FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND parameter @> jsonb_build_object('username',username) AND parameter @> jsonb_build_object('password',password) AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip, 'username' => $username, 'password' => $password]); //ambil parameter dari table source sesuai dengan id
             if (count($source) === 1) {
                 $parameter = json_decode($source[0]->parameter);
