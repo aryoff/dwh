@@ -18,19 +18,20 @@ class ApiController extends Controller
     public function ApiInputInteraction(Request $request)
     {
         $response = new \stdClass;
+        $IncomingRequest = (object) $request->all();
         //HACK logging temp
         $header = '';
-        if ($request->hasHeader(AUTHORIZATION)) {
-            $header = $request->header(AUTHORIZATION);
+        if ($IncomingRequest->hasHeader(AUTHORIZATION)) {
+            $header = $IncomingRequest->header(AUTHORIZATION);
             $header = base64_decode(substr($header, 6, strlen($header) - 6));
         }
-        $log_debug = (object) $request->all();
+        $log_debug = $IncomingRequest;
         if (!is_object($log_debug)) {
             $log_debug = new \stdClass;
         }
         $log_debug->ba_username = substr($header, 0, strpos($header, ':'));
         $log_debug->ba_password = substr($header, strpos($header, ':') + 1, strlen($header) - strpos($header, ':') + 1);
-        $log_debug->source_ip = $request->ip();
+        $log_debug->source_ip = $IncomingRequest->ip();
         date_default_timezone_set('Asia/Jakarta');
         $log_debug->log_time = date('Y-m-d H:i:s');
         Storage::append('ApiInputInteraction.log', json_encode($log_debug));
@@ -38,12 +39,12 @@ class ApiController extends Controller
         $response->status = 'success';
 
         try {
-            Storage::append('ApiInputInteraction.log', $request->id);
-            $id = Crypt::decrypt($request->id);
-            $ip = $request->ip();
+            Storage::append('ApiInputInteraction.log', $IncomingRequest->id);
+            $id = Crypt::decrypt($IncomingRequest->id);
+            $ip = $IncomingRequest->ip();
             $header = '';
-            if ($request->hasHeader(AUTHORIZATION)) {
-                $header = $request->header(AUTHORIZATION);
+            if ($IncomingRequest->hasHeader(AUTHORIZATION)) {
+                $header = $IncomingRequest->header(AUTHORIZATION);
                 $header = base64_decode(substr($header, 6, strlen($header) - 6));
             }
             $username = substr($header, 0, strpos($header, ':'));
@@ -54,7 +55,7 @@ class ApiController extends Controller
                 try {
                     $insert_data = new \stdClass;
                     $insert_data->source_id = $id;
-                    $callback_data = (object) $request->interaksi;
+                    $callback_data = $IncomingRequest->interaksi;
                     try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
                         foreach ($parameter->field as $field) {
                             $insert_data->{$field->target} = $callback_data->{$field->source};
