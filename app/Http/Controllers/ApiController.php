@@ -19,24 +19,23 @@ class ApiController extends Controller
     {
         $response = new \stdClass;
         //HACK logging temp
-        $header = '';
-        if ($request->hasHeader(AUTHORIZATION)) {
-            $header = $request->header(AUTHORIZATION);
-            $header = base64_decode(substr($header, 6, strlen($header) - 6));
-        }
-        $log_debug = (object) $request->all();
-        if (!is_object($log_debug)) {
-            $log_debug = new \stdClass;
-        }
+        // $header = '';
+        // if ($request->hasHeader(AUTHORIZATION)) {
+        //     $header = $request->header(AUTHORIZATION);
+        //     $header = base64_decode(substr($header, 6, strlen($header) - 6));
+        // }
+        // $log_debug = (object) $request->all();
+        // if (!is_object($log_debug)) {
+        //     $log_debug = new \stdClass;
+        // }
         // $log_debug->ba_username = substr($header, 0, strpos($header, ':'));
         // $log_debug->ba_password = substr($header, strpos($header, ':') + 1, strlen($header) - strpos($header, ':') + 1);
         // $log_debug->source_ip = $request->ip();
         // date_default_timezone_set('Asia/Jakarta');
         // $log_debug->log_time = date('Y-m-d H:i:s');
-        Storage::append('ApiInputInteraction.log', json_encode($log_debug));
+        // Storage::append('ApiInputInteraction.log', json_encode($log_debug));
         //HACK logging temp
         $response->status = 'success';
-
         try {
             $id = Crypt::decrypt($request->id);
             $ip = $request->ip();
@@ -52,7 +51,7 @@ class ApiController extends Controller
                 $parameter = json_decode($source[0]->parameter);
                 try {
                     $insert_data = new \stdClass;
-                    $insert_data->source_id = $id;
+                    $insert_data->dwh_source_id = $id;
                     $callback_data = (object) $request->interaksi;
                     try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
                         foreach ($parameter->field as $field) {
@@ -64,7 +63,7 @@ class ApiController extends Controller
                             Storage::append('ApiFailedInputInteraction.log', json_encode($insert_data));
                         }
                     } catch (Exception $fieldMismatchErr) { //kalau field nya ada yg salah, maka akan masuk ke dump failed
-                        $callback_data->source_id = $id;
+                        $callback_data->dwh_source_id = $id;
                         Storage::append('ApiFailedInputInteraction.log', json_encode($callback_data));
                     }
                 } catch (Exception $noInteractionDataErr) { //Interaction key not found on request body
