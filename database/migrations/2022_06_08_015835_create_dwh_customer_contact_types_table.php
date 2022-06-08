@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('dwh_customer_contact_types', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
+            $table->integer('priority')->unique()->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
