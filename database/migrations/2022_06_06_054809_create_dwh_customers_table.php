@@ -15,10 +15,8 @@ return new class extends Migration
     {
         Schema::create('dwh_customers', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
             //TODO unique id pelanggan (simduk?)
-            //TODO trigger perubahan data pelanggan
-            //TODO pelanggan bisa dibedakan masuk untuk layanan apa ???
-            //TODO data id sosmed / HP / email / Contact pelanggan
             if (env('DB_CONNECTION', false) == 'pgsql') {
                 $table->jsonb('profile')->default('{}'); //data diri customer
             } else {
