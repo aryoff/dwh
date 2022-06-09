@@ -56,7 +56,7 @@ class ApiController extends Controller
                     $contact_filter = "";
                     foreach ($customer_data as $key => $value) {
                         if ($key != 'nama') {
-                            $contact_filter .= "(dwh_customer_contact_types.name='" . strtolower($key) . "'AND dwh_customer_contacts.value='" . strtolower($value) . "')OR";
+                            $contact_filter .= "(dwh_customer_contact_types.name='" . strtolower($key) . "'AND dwh_customer_contacts.value=$$" . strtolower($value) . "$$)OR";
                         }
                     }
                     if ($contact_filter != '') {
@@ -107,16 +107,13 @@ class ApiController extends Controller
                         }
                         try {
                             if (!DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,data) VALUES (:id,:cid,:data)", ['id' => $id, 'cid' => $customerId, 'data' => json_encode($insert_data)])) { //insert data interaksi
-                                Storage::append('ApiFailedInputInteraction.log', 'Insert 1 fail');
                                 $this->failedInputInteraction($callback_data, $customer_data, $id);
                             }
                         } catch (QueryException $qe) {
-                            Storage::append('ApiFailedInputInteraction.log', 'Insert 2 fail');
                             $this->failedInputInteraction($callback_data, $customer_data, $id);
                         }
                     } catch (Exception $fieldMismatchErr) { //kalau field nya ada yg salah, maka akan masuk ke dump failed
                         $callback_data->dwh_source_id = $id;
-                        Storage::append('ApiFailedInputInteraction.log', 'Field mismatch');
                         $this->failedInputInteraction($callback_data, $customer_data, $id);
                     }
                 } catch (Exception $dataFormatErr) { //Interaction key not found on request body
