@@ -72,6 +72,7 @@ class ApiController extends Controller
                     if ($contact_type_list != '') {
                         $contact_type_list = substr($contact_type_list, 0, strlen($contact_type_list) - 1);
                     }
+                    Storage::append('ApiInputInteraction.log', 'Sebelum First contact query');
                     $contactTypeList = DB::select("SELECT id,name FROM dwh_customer_contact_types WHERE name IN ($contact_type_list)");
                     $possibleCustomerId = DB::select("SELECT DISTINCT dwh_customer_contacts.id FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter ORDER BY priority ASC");
                     Storage::append('ApiInputInteraction.log', 'First customer contact query');
