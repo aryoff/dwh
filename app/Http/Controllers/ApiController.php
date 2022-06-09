@@ -52,7 +52,7 @@ class ApiController extends Controller
                 try {
                     //find customer id
                     $customer_data = (object) $request->customer;
-                    $nama_customer = $customer_data->nama;
+                    $nama_customer = $customer_data->nama_pelanggan;
                     $contact_filter = "";
                     foreach ($customer_data as $key => $value) {
                         if ($key != 'nama') {
