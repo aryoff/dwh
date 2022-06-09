@@ -105,7 +105,9 @@ class ApiController extends Controller
                             $insert_data->{$field->target} = $callback_data->{$field->source};
                         }
                         try {
-                            DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,data) VALUES (:id,:cid,:data)", ['id' => $id, 'cid' => $customerId, 'data' => json_encode($insert_data)]); //insert data interaksi
+                            if (!DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,data) VALUES (:id,:cid,:data)", ['id' => $id, 'cid' => $customerId, 'data' => json_encode($insert_data)])) { //insert data interaksi
+                                Storage::append('ApiFailedInputInteraction.log', json_encode($insert_data));
+                            }
                         } catch (QueryException $qe) {
                             Storage::append('ApiFailedInputInteraction.log', json_encode($insert_data));
                         }
