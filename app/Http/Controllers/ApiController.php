@@ -73,7 +73,6 @@ class ApiController extends Controller
                     }
                     $contactTypeList = DB::select("SELECT id,name FROM dwh_customer_contact_types WHERE name IN ($contact_type_list)");
                     $possibleCustomerId = DB::select("SELECT DISTINCT dwh_customer_contacts.dwh_customer_id AS id,priority FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter ORDER BY priority ASC");
-                    Storage::append('ApiInputInteraction.log', 'First customer contact query');
                     $customerId = 0;
                     switch (count($possibleCustomerId)) {
                         case 0:
@@ -98,8 +97,6 @@ class ApiController extends Controller
                             # ada beberapa record user yg berbeda2
                             break;
                     }
-                    Storage::append('ApiInputInteraction.log', 'Customer ID' . $customerId);
-
                     $insert_data = new \stdClass;
                     $insert_data->dwh_source_id = $id;
                     $callback_data = (object) $request->interaksi;
@@ -108,7 +105,7 @@ class ApiController extends Controller
                             $insert_data->{$field->target} = $callback_data->{$field->source};
                         }
                         try {
-                            DB::insert("INSERT INTO dwh_interactions(dwh_source_id,data) VALUES (:id,:data)", ['id' => $id, 'data' => json_encode($insert_data)]); //insert data interaksi
+                            DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,data) VALUES (:id,:cid,:data)", ['id' => $id, 'cid' => $customerId, 'data' => json_encode($insert_data)]); //insert data interaksi
                         } catch (QueryException $qe) {
                             Storage::append('ApiFailedInputInteraction.log', json_encode($insert_data));
                         }
