@@ -72,7 +72,7 @@ class ApiController extends Controller
                         $contact_type_list = substr($contact_type_list, 0, strlen($contact_type_list) - 1);
                     }
                     $contactTypeList = DB::select("SELECT id,name FROM dwh_customer_contact_types WHERE name IN ($contact_type_list)");
-                    $possibleCustomerId = DB::select("SELECT DISTINCT dwh_customer_contacts.dwh_customer_id AS id,priority FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter ORDER BY priority ASC");
+                    $possibleCustomerId = DB::select("SELECT DISTINCT dwh_customer_contacts.dwh_customer_id AS id FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter");
                     $customerId = 0;
                     switch (count($possibleCustomerId)) {
                         case 0:
@@ -95,6 +95,7 @@ class ApiController extends Controller
                             break;
                         default:
                             //TODO ada beberapa record user yg berbeda2
+                            DB::select("SELECT dwh_customer_contacts.dwh_customer_id AS id,priority FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter ORDER BY priority ASC");
                             break;
                     }
                     $insert_data = new \stdClass;
