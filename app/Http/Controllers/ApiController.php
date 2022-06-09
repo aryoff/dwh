@@ -53,6 +53,7 @@ class ApiController extends Controller
                     //find customer id
                     $customer_data = (object) $request->customer;
                     $nama_customer = $customer_data->nama_pelanggan;
+                    Storage::append('ApiInputInteraction.log', 'Nama Pelanggan');
                     $contact_filter = "";
                     foreach ($customer_data as $key => $value) {
                         if ($key != 'nama') {
