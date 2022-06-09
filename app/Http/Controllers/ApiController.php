@@ -106,14 +106,14 @@ class ApiController extends Controller
                         }
                         try {
                             if (!DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,data) VALUES (:id,:cid,:data)", ['id' => $id, 'cid' => $customerId, 'data' => json_encode($insert_data)])) { //insert data interaksi
-                                Storage::append('ApiFailedInputInteraction.log', json_encode($insert_data));
+                                $this->failedInputInteraction($request, $id);
                             }
                         } catch (QueryException $qe) {
-                            Storage::append('ApiFailedInputInteraction.log', json_encode($insert_data));
+                            $this->failedInputInteraction($request, $id);
                         }
                     } catch (Exception $fieldMismatchErr) { //kalau field nya ada yg salah, maka akan masuk ke dump failed
                         $callback_data->dwh_source_id = $id;
-                        Storage::append('ApiFailedInputInteraction.log', json_encode($callback_data));
+                        $this->failedInputInteraction($request, $id);
                     }
                 } catch (Exception $dataFormatErr) { //Interaction key not found on request body
                     $response->status = 'Wrong Data Format';
@@ -125,6 +125,12 @@ class ApiController extends Controller
             $response->status = FAILED;
         }
         return $response;
+    }
+    function failedInputInteraction($request, $sourceId)
+    {
+        $failedData = (object) $request;
+        $failedData->dwh_source_id = $sourceId;
+        Storage::append('ApiFailedInputInteraction.log', json_encode($failedData));
     }
     public function ApiInputCustomer(Request $request)
     {
