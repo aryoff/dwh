@@ -46,7 +46,7 @@ class ApiController extends Controller
             }
             $username = substr($header, 0, strpos($header, ':'));
             $password = substr($header, strpos($header, ':') + 1, strlen($header) - strpos($header, ':') + 1);
-            $source = DB::select("SELECT parameter->'interaction' AS parameter FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND parameter @> jsonb_build_object('username',username) AND parameter @> jsonb_build_object('password',password) AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip, 'username' => $username, 'password' => $password]); //ambil parameter dari table source sesuai dengan id
+            $source = DB::select("SELECT parameter->'field' AS parameter FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND parameter @> jsonb_build_object('username',username) AND parameter @> jsonb_build_object('password',password) AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip, 'username' => $username, 'password' => $password]); //ambil parameter dari table source sesuai dengan id
             if (count($source) === 1) {
                 $parameter = json_decode($source[0]->parameter);
                 try {
@@ -62,7 +62,7 @@ class ApiController extends Controller
                         $successField[] = 'dwh_source_id';
                         foreach ($inputData as $inputKey => $inputValue) {
                             Storage::append('ApiInputInteraction.log', json_encode($parameter));
-                            foreach ($parameter->field as $fieldKey => $fieldValue) {
+                            foreach ($parameter as $fieldKey => $fieldValue) {
                                 switch ($fieldKey) {
                                     case 'interaction':
                                         foreach ($fieldValue as $field) {
