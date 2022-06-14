@@ -164,24 +164,6 @@ class ApiController extends Controller
                         Storage::append('ApiFailedInputInteraction.log', json_encode($inputData));
                     }
                     Storage::append('ApiInputInteraction.log', 'Point');
-                    // $insert_data = new \stdClass;
-                    // $insert_data->dwh_source_id = $id;
-                    // $callback_data = (object) $request->interaksi;
-                    // try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
-                    //     foreach ($parameter->field as $field) {
-                    //         $insert_data->{$field->target} = $callback_data->{$field->source};
-                    //     }
-                    //     try {
-                    //         if (!DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,data) VALUES (:id,:cid,:data)", ['id' => $id, 'cid' => $customerId, 'data' => json_encode($insert_data)])) { //insert data interaksi
-                    //             $this->failedInputInteraction($callback_data, $customer_data, $id);
-                    //         }
-                    //     } catch (QueryException $qe) {
-                    //         $this->failedInputInteraction($callback_data, $customer_data, $id);
-                    //     }
-                    // } catch (Exception $fieldMismatchErr) { //kalau field nya ada yg salah, maka akan masuk ke dump failed
-                    //     $callback_data->dwh_source_id = $id;
-                    //     $this->failedInputInteraction($callback_data, $customer_data, $id);
-                    // }
                 } catch (Exception $dataFormatErr) { //Interaction key not found on request body
                     $response->status = 'Wrong Data Format';
                 }
