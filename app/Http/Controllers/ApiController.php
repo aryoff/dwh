@@ -60,8 +60,8 @@ class ApiController extends Controller
                         $errField = array();
                         $successField = array();
                         $successField[] = 'dwh_source_id';
-                        Storage::append('ApiInputInteraction.log', json_encode($inputData));
                         foreach ($inputData as $inputKey => $inputValue) {
+                            Storage::append('ApiInputInteraction.log', 'point');
                             foreach ($parameter->field as $fieldKey => $fieldValue) {
                                 switch ($fieldKey) {
                                     case 'interaction':
