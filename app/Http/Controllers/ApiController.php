@@ -57,6 +57,7 @@ class ApiController extends Controller
                     try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
                         $interactionData = new \stdClass;
                         $customerData = new \stdClass;
+                        $partnerData = new \stdClass;
                         $errField = array();
                         $successField = array();
                         $successField[] = 'dwh_source_id';
@@ -75,6 +76,14 @@ class ApiController extends Controller
                                         foreach ($fieldValue as $field) {
                                             if ($inputKey == $field->source) {
                                                 $customerData->{$field->target} = $inputValue;
+                                                $successField[] = $inputKey;
+                                            }
+                                        }
+                                        break;
+                                    case 'partner':
+                                        foreach ($fieldValue as $field) {
+                                            if ($inputKey == $field->source) {
+                                                $partnerData->{$field->target} = $inputValue;
                                                 $successField[] = $inputKey;
                                             }
                                         }
@@ -144,7 +153,7 @@ class ApiController extends Controller
                             break;
                         default:
                             //TODO ada beberapa record user yg berbeda2
-                            DB::select("SELECT dwh_customer_contacts.dwh_customer_id AS id,priority FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter ORDER BY priority ASC");
+                            $customerId = DB::select("SELECT dwh_customer_contacts.dwh_customer_id AS id,priority FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter ORDER BY priority ASC")[0]->id; //ambil customer id yg paling prioritas
                             break;
                     }
                     try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
