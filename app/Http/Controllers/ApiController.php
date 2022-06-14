@@ -150,12 +150,12 @@ class ApiController extends Controller
                     try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
                         if (!DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,data) VALUES (:id,:cid,:data)", ['id' => $id, 'cid' => $customerId, 'data' => json_encode($interactionData)])) { //insert data interaksi
                             $inputData->dwh_source_id = $id;
-                            $inputData->error = 'User ID Failed';
+                            $inputData->error = "User ID $customerId Failed";
                             Storage::append('ApiFailedInputInteraction.log', json_encode($inputData));
                         }
                     } catch (Exception $uidErr) {
                         $inputData->dwh_source_id = $id;
-                        $inputData->error = 'User ID Failed';
+                        $inputData->error = 'User ID Failed ' . $customerId;
                         Storage::append('ApiFailedInputInteraction.log', json_encode($inputData));
                     }
                 } catch (Exception $dataFormatErr) { //Interaction key not found on request body
