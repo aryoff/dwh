@@ -38,7 +38,6 @@ class ApiController extends Controller
         $response->status = 'success';
         try {
             $id = Crypt::decrypt($request->dwh_source_id);
-            Storage::append('ApiInputInteraction.log', 'point1');
             $ip = $request->ip();
             $header = '';
             if ($request->hasHeader(AUTHORIZATION)) {
@@ -53,7 +52,7 @@ class ApiController extends Controller
                 try {
                     //TODO fields convertion
                     $insertData = new \stdClass;
-                    $inputData = (object) $request;
+                    $inputData = (object) $request->all();
                     $insertData->dwh_source_id = $id;
                     try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
                         $interactionData = new \stdClass;
