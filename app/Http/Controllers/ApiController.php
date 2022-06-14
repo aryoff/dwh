@@ -177,9 +177,11 @@ class ApiController extends Controller
                     $response->status = 'Wrong Data Format';
                 }
             } else { //Source select failed
+                Storage::append('ApiInputInteraction.log', 'Failed to authenticate from ' . $request->ip());
                 $response->status = FAILED;
             }
         } catch (DecryptException $decryptErr) { //Decryption failed
+            Storage::append('ApiInputInteraction.log', 'Failed to decrypt ID from ' . $request->ip());
             $response->status = FAILED;
         }
         return $response;
