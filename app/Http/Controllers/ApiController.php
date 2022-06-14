@@ -101,11 +101,6 @@ class ApiController extends Controller
                         $inputData->dwh_source_id = $id;
                         Storage::append('ApiFailedInputInteraction.log', json_encode($inputData));
                     }
-
-
-
-
-
                     // //find customer id
                     $contact_filter = "";
                     foreach ($customerData as $key => $value) {
@@ -163,7 +158,6 @@ class ApiController extends Controller
                         $inputData->error = 'User ID Failed';
                         Storage::append('ApiFailedInputInteraction.log', json_encode($inputData));
                     }
-                    Storage::append('ApiInputInteraction.log', 'Point');
                 } catch (Exception $dataFormatErr) { //Interaction key not found on request body
                     $response->status = 'Wrong Data Format';
                 }
