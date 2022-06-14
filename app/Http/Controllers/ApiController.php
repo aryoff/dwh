@@ -107,8 +107,6 @@ class ApiController extends Controller
 
 
                     // //find customer id
-                    // $customer_data = (object) $request->customer;
-                    // $nama_customer = $customer_data->nama_pelanggan;
                     $contact_filter = "";
                     foreach ($customerData as $key => $value) {
                         if ($key != 'nama') {
@@ -154,6 +152,7 @@ class ApiController extends Controller
                             DB::select("SELECT dwh_customer_contacts.dwh_customer_id AS id,priority FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter ORDER BY priority ASC");
                             break;
                     }
+                    DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,data) VALUES (:id,:cid,:data)", ['id' => $id, 'cid' => $customerId, 'data' => json_encode($interactionData)]); //insert data interaksi
                     Storage::append('ApiInputInteraction.log', 'Point');
                     // $insert_data = new \stdClass;
                     // $insert_data->dwh_source_id = $id;
