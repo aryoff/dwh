@@ -36,9 +36,9 @@ class ApiController extends Controller
         Storage::append('ApiInputInteraction.log', json_encode($log_debug));
         //HACK logging temp
         $response->status = 'success';
+        Storage::append('ApiInputInteraction.log', 'point1');
         try {
             $id = Crypt::decrypt($request->id);
-            Storage::append('ApiInputInteraction.log', 'point1');
             $ip = $request->ip();
             $header = '';
             if ($request->hasHeader(AUTHORIZATION)) {
