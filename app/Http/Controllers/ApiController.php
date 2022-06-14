@@ -106,72 +106,72 @@ class ApiController extends Controller
 
 
 
-                    //find customer id
-                    $customer_data = (object) $request->customer;
-                    $nama_customer = $customer_data->nama_pelanggan;
-                    $contact_filter = "";
-                    foreach ($customer_data as $key => $value) {
-                        if ($key != 'nama') {
-                            $contact_filter .= "(dwh_customer_contact_types.name='" . strtolower($key) . "'AND dwh_customer_contacts.value=$$" . strtolower($value) . "$$)OR";
-                        }
-                    }
-                    if ($contact_filter != '') {
-                        $contact_filter = substr($contact_filter, 0, strlen($contact_filter) - 2);
-                    } else {
-                        $contact_filter = 'false';
-                    }
-                    $contact_type_list = "";
-                    foreach ($customer_data as $key => $value) {
-                        $contact_type_list .= "'" . strtolower($key) . "',";
-                    }
-                    if ($contact_type_list != '') {
-                        $contact_type_list = substr($contact_type_list, 0, strlen($contact_type_list) - 1);
-                    }
-                    $contactTypeList = DB::select("SELECT id,name FROM dwh_customer_contact_types WHERE name IN ($contact_type_list)");
-                    $possibleCustomerId = DB::select("SELECT DISTINCT dwh_customer_contacts.dwh_customer_id AS id FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter");
-                    $customerId = 0;
-                    switch (count($possibleCustomerId)) {
-                        case 0:
-                            # user tidak ditemukan
-                            $first = true;
-                            foreach ($contactTypeList as $value) {
-                                if ($first) { //bikin data customer baru
-                                    $customerId = DB::select("INSERT INTO dwh_customers(name) VALUES (?) RETURNING id", [$nama_customer])[0]->id;
-                                    $first = false;
-                                }
-                                DB::insert("INSERT INTO dwh_customer_contacts(dwh_customer_id,dwh_customer_contact_type_id,value) VALUES ($customerId,:tid,:val)", ['tid' => $value->id, 'val' => $customer_data->{$value->name}]);
-                            }
-                            break;
-                        case 1:
-                            # user ditemukan
-                            $customerId = $possibleCustomerId[0]->id;
-                            foreach ($contactTypeList as $value) {
-                                DB::insert("INSERT INTO dwh_customer_contacts(dwh_customer_id,dwh_customer_contact_type_id,value)VALUES ($customerId,:tid,:val)ON CONFLICT(dwh_customer_contact_type_id, value)DO NOTHING;", ['tid' => $value->id, 'val' => $customer_data->{$value->name}]);
-                            }
-                            break;
-                        default:
-                            //TODO ada beberapa record user yg berbeda2
-                            DB::select("SELECT dwh_customer_contacts.dwh_customer_id AS id,priority FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter ORDER BY priority ASC");
-                            break;
-                    }
-                    $insert_data = new \stdClass;
-                    $insert_data->dwh_source_id = $id;
-                    $callback_data = (object) $request->interaksi;
-                    try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
-                        foreach ($parameter->field as $field) {
-                            $insert_data->{$field->target} = $callback_data->{$field->source};
-                        }
-                        try {
-                            if (!DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,data) VALUES (:id,:cid,:data)", ['id' => $id, 'cid' => $customerId, 'data' => json_encode($insert_data)])) { //insert data interaksi
-                                $this->failedInputInteraction($callback_data, $customer_data, $id);
-                            }
-                        } catch (QueryException $qe) {
-                            $this->failedInputInteraction($callback_data, $customer_data, $id);
-                        }
-                    } catch (Exception $fieldMismatchErr) { //kalau field nya ada yg salah, maka akan masuk ke dump failed
-                        $callback_data->dwh_source_id = $id;
-                        $this->failedInputInteraction($callback_data, $customer_data, $id);
-                    }
+                    // //find customer id
+                    // $customer_data = (object) $request->customer;
+                    // $nama_customer = $customer_data->nama_pelanggan;
+                    // $contact_filter = "";
+                    // foreach ($customer_data as $key => $value) {
+                    //     if ($key != 'nama') {
+                    //         $contact_filter .= "(dwh_customer_contact_types.name='" . strtolower($key) . "'AND dwh_customer_contacts.value=$$" . strtolower($value) . "$$)OR";
+                    //     }
+                    // }
+                    // if ($contact_filter != '') {
+                    //     $contact_filter = substr($contact_filter, 0, strlen($contact_filter) - 2);
+                    // } else {
+                    //     $contact_filter = 'false';
+                    // }
+                    // $contact_type_list = "";
+                    // foreach ($customer_data as $key => $value) {
+                    //     $contact_type_list .= "'" . strtolower($key) . "',";
+                    // }
+                    // if ($contact_type_list != '') {
+                    //     $contact_type_list = substr($contact_type_list, 0, strlen($contact_type_list) - 1);
+                    // }
+                    // $contactTypeList = DB::select("SELECT id,name FROM dwh_customer_contact_types WHERE name IN ($contact_type_list)");
+                    // $possibleCustomerId = DB::select("SELECT DISTINCT dwh_customer_contacts.dwh_customer_id AS id FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter");
+                    // $customerId = 0;
+                    // switch (count($possibleCustomerId)) {
+                    //     case 0:
+                    //         # user tidak ditemukan
+                    //         $first = true;
+                    //         foreach ($contactTypeList as $value) {
+                    //             if ($first) { //bikin data customer baru
+                    //                 $customerId = DB::select("INSERT INTO dwh_customers(name) VALUES (?) RETURNING id", [$nama_customer])[0]->id;
+                    //                 $first = false;
+                    //             }
+                    //             DB::insert("INSERT INTO dwh_customer_contacts(dwh_customer_id,dwh_customer_contact_type_id,value) VALUES ($customerId,:tid,:val)", ['tid' => $value->id, 'val' => $customer_data->{$value->name}]);
+                    //         }
+                    //         break;
+                    //     case 1:
+                    //         # user ditemukan
+                    //         $customerId = $possibleCustomerId[0]->id;
+                    //         foreach ($contactTypeList as $value) {
+                    //             DB::insert("INSERT INTO dwh_customer_contacts(dwh_customer_id,dwh_customer_contact_type_id,value)VALUES ($customerId,:tid,:val)ON CONFLICT(dwh_customer_contact_type_id, value)DO NOTHING;", ['tid' => $value->id, 'val' => $customer_data->{$value->name}]);
+                    //         }
+                    //         break;
+                    //     default:
+                    //         //TODO ada beberapa record user yg berbeda2
+                    //         DB::select("SELECT dwh_customer_contacts.dwh_customer_id AS id,priority FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter ORDER BY priority ASC");
+                    //         break;
+                    // }
+                    // $insert_data = new \stdClass;
+                    // $insert_data->dwh_source_id = $id;
+                    // $callback_data = (object) $request->interaksi;
+                    // try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
+                    //     foreach ($parameter->field as $field) {
+                    //         $insert_data->{$field->target} = $callback_data->{$field->source};
+                    //     }
+                    //     try {
+                    //         if (!DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,data) VALUES (:id,:cid,:data)", ['id' => $id, 'cid' => $customerId, 'data' => json_encode($insert_data)])) { //insert data interaksi
+                    //             $this->failedInputInteraction($callback_data, $customer_data, $id);
+                    //         }
+                    //     } catch (QueryException $qe) {
+                    //         $this->failedInputInteraction($callback_data, $customer_data, $id);
+                    //     }
+                    // } catch (Exception $fieldMismatchErr) { //kalau field nya ada yg salah, maka akan masuk ke dump failed
+                    //     $callback_data->dwh_source_id = $id;
+                    //     $this->failedInputInteraction($callback_data, $customer_data, $id);
+                    // }
                 } catch (Exception $dataFormatErr) { //Interaction key not found on request body
                     $response->status = 'Wrong Data Format';
                 }
