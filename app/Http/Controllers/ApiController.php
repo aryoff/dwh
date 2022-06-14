@@ -60,6 +60,7 @@ class ApiController extends Controller
                         $errField = array();
                         $successField = array();
                         $successField[] = 'dwh_source_id';
+                        Storage::append('ApiInputInteraction.log', 'Point Init');
                         foreach ($inputData as $inputKey => $inputValue) {
                             foreach ($parameter->field as $fieldKey => $fieldValue) {
                                 switch ($fieldKey) {
