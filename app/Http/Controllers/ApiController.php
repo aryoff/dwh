@@ -162,7 +162,7 @@ class ApiController extends Controller
                             $inputData->error = "User ID $customerId Failed";
                             Storage::append('ApiFailedInputInteraction.log', json_encode($inputData));
                         }
-                    } catch (Exception $uidErr) {
+                    } catch (QueryException $qe) {
                         $inputData->dwh_source_id = $id;
                         $inputData->error = 'User ID Failed ' . $customerId;
                         Storage::append('ApiFailedInputInteraction.log', json_encode($inputData));
