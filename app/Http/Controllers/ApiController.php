@@ -61,7 +61,6 @@ class ApiController extends Controller
                         $successField = array();
                         $successField[] = 'dwh_source_id';
                         foreach ($inputData as $inputKey => $inputValue) {
-                            Storage::append('ApiInputInteraction.log', json_encode($parameter));
                             foreach ($parameter as $fieldKey => $fieldValue) {
                                 switch ($fieldKey) {
                                     case 'interaction':
@@ -88,7 +87,6 @@ class ApiController extends Controller
                                         }
                                         break;
                                 }
-                                Storage::append('ApiInputInteraction.log', 'Point Init');
                             }
                             if (!in_array($inputKey, $successField)) {
                                 $errField[] = $inputKey;
