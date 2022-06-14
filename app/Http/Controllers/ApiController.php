@@ -37,7 +37,7 @@ class ApiController extends Controller
         //HACK logging temp
         $response->status = 'success';
         try {
-            $id = Crypt::decrypt($request->id);
+            $id = Crypt::decrypt($request->dwh_source_id);
             Storage::append('ApiInputInteraction.log', 'point1');
             $ip = $request->ip();
             $header = '';
