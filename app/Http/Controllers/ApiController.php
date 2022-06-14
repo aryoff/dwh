@@ -50,6 +50,62 @@ class ApiController extends Controller
             if (count($source) === 1) {
                 $parameter = json_decode($source[0]->parameter);
                 try {
+                    //TODO fields convertion
+                    $insertData = new \stdClass;
+                    $inputData = (object) $request;
+                    $insertData->dwh_source_id = $id;
+                    try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
+                        $interactionData = new \stdClass;
+                        $customerData = new \stdClass;
+                        $errField = array();
+                        $successField = array();
+                        $successField[] = 'dwh_source_id';
+                        foreach ($inputData as $inputKey => $inputValue) {
+                            foreach ($parameter->field as $fieldKey => $fieldValue) {
+                                switch ($fieldKey) {
+                                    case 'interaction':
+                                        foreach ($fieldValue as $field) {
+                                            if ($inputKey == $field->source) {
+                                                $interactionData->{$field->target} = $inputValue;
+                                                $successField[] = $inputKey;
+                                            }
+                                        }
+                                        break;
+                                    case 'customer':
+                                        foreach ($fieldValue as $field) {
+                                            if ($inputKey == $field->source) {
+                                                $customerData->{$field->target} = $inputValue;
+                                                $successField[] = $inputKey;
+                                            }
+                                        }
+                                        break;
+                                    default: //check ignored fields
+                                        foreach ($fieldValue as $field) {
+                                            if ($inputKey == $field) {
+                                                $successField[] = $inputKey;
+                                            }
+                                        }
+                                        break;
+                                }
+                            }
+                            if (!in_array($inputKey, $successField)) {
+                                $errField[] = $inputKey;
+                            }
+                        }
+                        if (count($errField) > 0) {
+                            $inputData->dwh_source_id = $id;
+                            $inputData->err_field = $errField;
+                            Storage::append('ApiFailedInputInteraction.log', json_encode($inputData));
+                        }
+                    } catch (Exception $fieldMismatchErr) { //kalau field nya ada yg salah, maka akan masuk ke dump failed
+                        $inputData->dwh_source_id = $id;
+                        Storage::append('ApiFailedInputInteraction.log', json_encode($inputData));
+                    }
+
+
+
+
+
                     //find customer id
                     $customer_data = (object) $request->customer;
                     $nama_customer = $customer_data->nama_pelanggan;
