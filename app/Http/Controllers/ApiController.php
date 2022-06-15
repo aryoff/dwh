@@ -158,7 +158,18 @@ class ApiController extends Controller
                             break;
                     }
                     #find partner identity
-                    $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity)VALUES(:pid,:identity) ON CONFLICT (dwh_partner_id,identity) DO NOTHING RETURNING id;", ['pid' => $partnerId, 'identity' => $partnerData->identity])[0]->id;
+                    $partnerProfiles = '';
+                    foreach ($partnerData as $key => $value) {
+                        if ($key != 'identity') {
+                            $partnerProfiles .= "'$key','$value',";
+                        }
+                    }
+                    if ($partnerProfiles != '') {
+                        $partnerProfiles = "jsonb_build_object(" . substr($partnerProfiles, 0, strlen($partnerProfiles) - 1) . ")";
+                    } else {
+                        $partnerProfiles = "'{}'::jsonb";
+                    }
+                    $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity,profile)VALUES(:pid,':identity',$partnerProfiles) ON CONFLICT (dwh_partner_id,identity) DO UPDATE SET profile=dwh_partner_identities.profile||EXCLUDED.profile RETURNING id;", ['pid' => $partnerId, 'identity' => $partnerData->identity])[0]->id;
                     try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
                         if (!DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,dwh_partner_identity_id,data) VALUES (:id,:cid,:pid,:data)", ['id' => $id, 'cid' => $customerId, 'pid' => $partnerIdentityId, 'data' => json_encode($interactionData)])) { //insert data interaksi
                             $inputData->dwh_source_id = $id;
