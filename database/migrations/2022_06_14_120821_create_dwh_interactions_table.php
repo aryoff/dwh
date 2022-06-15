@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('dwh_interactions', function (Blueprint $table) {
             $table->foreignId('dwh_source_id')->constrained(); //sumber data (index?)
             $table->foreignId('dwh_customer_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('dwh_partner_identity_id')->constrained()->cascadeOnDelete();
             if (env('DB_CONNECTION', false) == 'pgsql') {
                 $table->jsonb('data')->default('{}'); //data interaksi
             } else {
@@ -23,6 +24,9 @@ return new class extends Migration
             }
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->index('dwh_partner_identity_id');
+            $table->index('dwh_source_id');
+            $table->index('dwh_customer_id');
         });
         if (env('DB_CONNECTION', false) == 'pgsql') {
             DB::statement('CREATE INDEX dwh_interactions_datagin ON dwh_interactions USING gin ((data))');

@@ -13,14 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('dwh_customer_contacts', function (Blueprint $table) {
-            $table->foreignId('dwh_customer_contact_type_id')->constrained()->cascadeOnDelete();
-            $table->string('value');
+        Schema::create('dwh_customer_to_partner', function (Blueprint $table) {
             $table->foreignId('dwh_customer_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('dwh_partner_identity_id')->constrained()->cascadeOnDelete();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
-            $table->primary(['dwh_customer_contact_type_id', 'value']);
-            $table->index(['dwh_customer_id']);
+            $table->primary(['dwh_customer_id', 'dwh_partner_identity_id']);
         });
     }
 
@@ -31,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('dwh_customer_contacts');
+        Schema::dropIfExists('dwh_customer_to_partner');
     }
 };

@@ -13,21 +13,19 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('dwh_sources', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('dwh_partner_id')->constrained()->cascadeOnDelete();
-            $table->string('name')->unique();
+        Schema::create('dwh_partner_datas', function (Blueprint $table) {
+            $table->foreignId('dwh_partner_identity_id')->constrained()->cascadeOnDelete();
             if (env('DB_CONNECTION', false) == 'pgsql') {
-                $table->jsonb('parameter')->default('{}');
+                $table->jsonb('data')->default('{}'); //data diri customer
             } else {
-                $table->json('parameter')->default('{}');
+                $table->json('data')->default('{}');
             }
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
-            $table->index(['dwh_partner_id']);
+            $table->index('dwh_partner_identity_id');
         });
         if (env('DB_CONNECTION', false) == 'pgsql') {
-            DB::statement('CREATE INDEX dwh_sources_parametergin ON dwh_sources USING gin ((parameter))');
+            DB::statement('CREATE INDEX dwh_partner_datas_datagin ON dwh_partner_datas USING gin ((data))');
         }
     }
 
@@ -38,6 +36,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('dwh_sources');
+        Schema::dropIfExists('dwh_partner_datas');
     }
 };
