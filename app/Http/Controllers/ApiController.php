@@ -24,7 +24,7 @@ class ApiController extends Controller
         //     $header = $request->header(AUTHORIZATION);
         //     $header = base64_decode(substr($header, 6, strlen($header) - 6));
         // }
-        $log_debug = (object) $request->all();
+        // $log_debug = (object) $request->all();
         // if (!is_object($log_debug)) {
         //     $log_debug = new \stdClass;
         // }
@@ -33,7 +33,7 @@ class ApiController extends Controller
         // $log_debug->source_ip = $request->ip();
         // date_default_timezone_set('Asia/Jakarta');
         // $log_debug->log_time = date('Y-m-d H:i:s');
-        Storage::append('ApiInputInteraction.log', json_encode($log_debug));
+        // Storage::append('ApiInputInteraction.log', json_encode($log_debug));
         //HACK logging temp
         $response->status = 'success';
         try {
@@ -169,7 +169,6 @@ class ApiController extends Controller
                     } else {
                         $partnerProfiles = "'{}'::jsonb";
                     }
-                    Storage::append('ApiInputInteraction.log', "INSERT INTO dwh_partner_identities(dwh_partner_id,identity,profile)VALUES($partnerId,'$partnerData->identity',$partnerProfiles) ON CONFLICT (dwh_partner_id,identity) DO UPDATE SET profile=dwh_partner_identities.profile||EXCLUDED.profile RETURNING id;");
                     $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity,profile)VALUES(:pid,:identity::VARCHAR,$partnerProfiles) ON CONFLICT (dwh_partner_id,identity) DO UPDATE SET profile=dwh_partner_identities.profile||EXCLUDED.profile RETURNING id;", ['pid' => $partnerId, 'identity' => $partnerData->identity])[0]->id;
                     try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
                         if (!DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,dwh_partner_identity_id,data) VALUES (:id,:cid,:pid,:data)", ['id' => $id, 'cid' => $customerId, 'pid' => $partnerIdentityId, 'data' => json_encode($interactionData)])) { //insert data interaksi
