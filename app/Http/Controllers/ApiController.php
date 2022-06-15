@@ -46,9 +46,10 @@ class ApiController extends Controller
             }
             $username = substr($header, 0, strpos($header, ':'));
             $password = substr($header, strpos($header, ':') + 1, strlen($header) - strpos($header, ':') + 1);
-            $source = DB::select("SELECT parameter->'field' AS parameter FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND parameter @> jsonb_build_object('username',username) AND parameter @> jsonb_build_object('password',password) AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip, 'username' => $username, 'password' => $password]); //ambil parameter dari table source sesuai dengan id
+            $source = DB::select("SELECT parameter->'field' AS parameter,dwh_partner_id FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND parameter @> jsonb_build_object('username',username) AND parameter @> jsonb_build_object('password',password) AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip, 'username' => $username, 'password' => $password]); //ambil parameter dari table source sesuai dengan id
             if (count($source) === 1) {
                 $parameter = json_decode($source[0]->parameter);
+                $partnerId = $source[0]->dwh_partner_id;
                 try {
                     //fields convertion
                     $insertData = new \stdClass;
@@ -156,13 +157,10 @@ class ApiController extends Controller
                             $customerId = DB::select("SELECT dwh_customer_contacts.dwh_customer_id AS id,priority FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter ORDER BY priority ASC")[0]->id; //ambil customer id yg paling prioritas
                             break;
                     }
-
-
-
-
-
+                    #find partner identity
+                    $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity)VALUES(:pid,:identity) ON CONFLICT (identity) DO NOTHING RETURNING id;", ['pid' => $partnerId, 'identity' => $partnerData->identity])[0]->id;
                     try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
-                        if (!DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,data) VALUES (:id,:cid,:data)", ['id' => $id, 'cid' => $customerId, 'data' => json_encode($interactionData)])) { //insert data interaksi
+                        if (!DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,dwh_partner_identity_id,data) VALUES (:id,:cid,:pid,:data)", ['id' => $id, 'cid' => $customerId, 'pid' => $partnerIdentityId, 'data' => json_encode($interactionData)])) { //insert data interaksi
                             $inputData->dwh_source_id = $id;
                             $inputData->error = "User ID $customerId Failed";
                             Storage::append('ApiFailedInputInteraction.log', json_encode($inputData));
