@@ -158,8 +158,8 @@ class ApiController extends Controller
                             break;
                     }
                     #find partner identity
+                    Storage::append('ApiInputInteraction.log', $partnerId);
                     $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity)VALUES(:pid,:identity) ON CONFLICT (identity) DO NOTHING RETURNING id;", ['pid' => $partnerId, 'identity' => $partnerData->identity])[0]->id;
-                    Storage::append('ApiInputInteraction.log', $partnerIdentityId);
                     try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
                         if (!DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,dwh_partner_identity_id,data) VALUES (:id,:cid,:pid,:data)", ['id' => $id, 'cid' => $customerId, 'pid' => $partnerIdentityId, 'data' => json_encode($interactionData)])) { //insert data interaksi
                             $inputData->dwh_source_id = $id;
