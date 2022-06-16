@@ -62,7 +62,7 @@ class ApiController extends Controller
     }
     function executeInputInteraction($source, $request, $id)
     {
-        Storage::append('ApiInputInteraction.log', json_encode($source[0]->parameter));
+        Storage::append('ApiInputInteraction.log', json_encode($source[0]));
         $parameter = json_decode($source[0]->parameter);
         $partnerId = $source[0]->dwh_partner_id;
         //fields convertion
