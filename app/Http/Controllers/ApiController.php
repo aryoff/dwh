@@ -62,6 +62,7 @@ class ApiController extends Controller
     }
     function executeInputInteraction($source, $request, $id)
     {
+        Storage::append('ApiInputInteraction.log', json_encode($source[0]->parameter));
         $parameter = json_decode($source[0]->parameter);
         $partnerId = $source[0]->dwh_partner_id;
         //fields convertion
@@ -145,7 +146,6 @@ class ApiController extends Controller
     }
     function convertDataInputInteraction($parameter, $request, $id)
     {
-        Storage::append('ApiInputInteraction.log', 'convertDataInputInteraction');
         $response = new \stdClass;
         $insertData = new \stdClass;
         $inputData = $request;
