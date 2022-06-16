@@ -25,7 +25,7 @@ class ApiController extends Controller
         //     $header = $request->header(AUTHORIZATION);
         //     $header = base64_decode(substr($header, 6, strlen($header) - 6));
         // }
-        // $log_debug = (object) $request->all();
+        $log_debug = (object) $request->all();
         // if (!is_object($log_debug)) {
         //     $log_debug = new \stdClass;
         // }
@@ -34,7 +34,7 @@ class ApiController extends Controller
         // $log_debug->source_ip = $request->ip();
         // date_default_timezone_set('Asia/Jakarta');
         // $log_debug->log_time = date('Y-m-d H:i:s');
-        // Storage::append('ApiInputInteraction.log', json_encode($log_debug));
+        Storage::append('ApiInputInteraction.log', json_encode($log_debug));
         //HACK logging temp
         $response->status = 'success';
         try {
@@ -62,7 +62,7 @@ class ApiController extends Controller
     }
     function executeInputInteraction($source, $request, $id)
     {
-        Storage::append('ApiInputInteraction.log', json_encode($source[0]));
+        Storage::append('ApiInputInteraction.log', $source);
         $parameter = json_decode($source[0]->parameter);
         $partnerId = $source[0]->dwh_partner_id;
         //fields convertion
