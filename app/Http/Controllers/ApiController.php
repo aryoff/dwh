@@ -51,7 +51,7 @@ class ApiController extends Controller
             if (count($source) === 1) {
                 $this->executeInputInteraction($source, (object) $request->all(), $id);
             } else { //Source select failed
-                Storage::append('ApiInputInteraction.log', 'Failed to authenticate from ' . $request->ip() . ' ' . $username . ' ' . $password);
+                Storage::append('ApiInputInteraction.log', 'Failed to authenticate from ' . $request->ip() . ' ' . $request->header(AUTHORIZATION));
                 $response->status = FAILED;
             }
         } catch (DecryptException $decryptErr) { //Decryption failed
