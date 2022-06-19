@@ -8,6 +8,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 define('FAILED', 'failed');
@@ -34,18 +35,17 @@ class ApiController extends Controller
             if (count($source) === 1) {
                 $this->executeInputInteraction($source, (object) $request->all(), $id);
             } else { //Source select failed
-                Storage::append('ApiInputInteraction.log', 'Failed to authenticate from ' . $request->ip() . ' ' . $request);
+                Log::critical('Failed to authenticate from ' . $request->ip() . ' ' . $request);
                 $response->status = FAILED;
             }
         } catch (DecryptException $decryptErr) { //Decryption failed
-            Storage::append('ApiInputInteraction.log', 'Failed to decrypt ID from ' . $request->ip());
+            Log::critical('Failed to decrypt ID from ' . $request->ip());
             $response->status = FAILED;
         }
         return $response;
     }
     function executeInputInteraction($source, $request, $id)
     {
-        // Storage::append('ApiInputInteraction.log', $source);
         $parameter = json_decode($source[0]->parameter);
         $partnerId = $source[0]->dwh_partner_id;
         //fields convertion
