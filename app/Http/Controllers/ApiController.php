@@ -89,59 +89,59 @@ class ApiController extends Controller
         }
         if ($contact_type_list != '') {
             $contact_type_list = substr($contact_type_list, 0, strlen($contact_type_list) - 1);
-        }
-        $contactTypeList = DB::select("SELECT id,name FROM dwh_customer_contact_types WHERE name IN ($contact_type_list)");
-        $possibleCustomerId = DB::select("SELECT DISTINCT dwh_customer_contacts.dwh_customer_id AS id FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter");
-        $customerId = 0;
-        switch (count($possibleCustomerId)) {
-            case 0:
-                # user tidak ditemukan
-                $first = true;
-                foreach ($contactTypeList as $value) {
-                    if ($first) { //bikin data customer baru
-                        $customerId = DB::select("INSERT INTO dwh_customers(name) VALUES (?) RETURNING id", [$customerData->nama])[0]->id;
-                        $first = false;
+            $contactTypeList = DB::select("SELECT id,name FROM dwh_customer_contact_types WHERE name IN ($contact_type_list)");
+            $possibleCustomerId = DB::select("SELECT DISTINCT dwh_customer_contacts.dwh_customer_id AS id FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter");
+            $customerId = 0;
+            switch (count($possibleCustomerId)) {
+                case 0:
+                    # user tidak ditemukan
+                    $first = true;
+                    foreach ($contactTypeList as $value) {
+                        if ($first) { //bikin data customer baru
+                            $customerId = DB::select("INSERT INTO dwh_customers(name) VALUES (?) RETURNING id", [$customerData->nama])[0]->id;
+                            $first = false;
+                        }
+                        DB::insert("INSERT INTO dwh_customer_contacts(dwh_customer_id,dwh_customer_contact_type_id,value) VALUES ($customerId,:tid,:val)", ['tid' => $value->id, 'val' => $customerData->{$value->name}]);
                     }
-                    DB::insert("INSERT INTO dwh_customer_contacts(dwh_customer_id,dwh_customer_contact_type_id,value) VALUES ($customerId,:tid,:val)", ['tid' => $value->id, 'val' => $customerData->{$value->name}]);
-                }
-                break;
-            case 1:
-                # user ditemukan
-                $customerId = $possibleCustomerId[0]->id;
-                foreach ($contactTypeList as $value) {
-                    DB::insert("INSERT INTO dwh_customer_contacts(dwh_customer_id,dwh_customer_contact_type_id,value)VALUES ($customerId,:tid,:val)ON CONFLICT(dwh_customer_contact_type_id, value)DO NOTHING;", ['tid' => $value->id, 'val' => $customerData->{$value->name}]);
-                }
-                break;
-            default:
-                //TODO ada beberapa record user yg berbeda2
-                $customerId = DB::select("SELECT dwh_customer_contacts.dwh_customer_id AS id,priority FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter ORDER BY priority ASC")[0]->id; //ambil customer id yg paling prioritas
-                break;
-        }
-        #find partner identity
-        $partnerProfiles = '';
-        foreach ($partnerData as $key => $value) {
-            if ($key != 'identity') {
-                $partnerProfiles .= "'$key','$value',";
+                    break;
+                case 1:
+                    # user ditemukan
+                    $customerId = $possibleCustomerId[0]->id;
+                    foreach ($contactTypeList as $value) {
+                        DB::insert("INSERT INTO dwh_customer_contacts(dwh_customer_id,dwh_customer_contact_type_id,value)VALUES ($customerId,:tid,:val)ON CONFLICT(dwh_customer_contact_type_id, value)DO NOTHING;", ['tid' => $value->id, 'val' => $customerData->{$value->name}]);
+                    }
+                    break;
+                default:
+                    //TODO ada beberapa record user yg berbeda2
+                    $customerId = DB::select("SELECT dwh_customer_contacts.dwh_customer_id AS id,priority FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter ORDER BY priority ASC")[0]->id; //ambil customer id yg paling prioritas
+                    break;
             }
-        }
-        if ($partnerProfiles != '') {
-            $partnerProfiles = "jsonb_build_object(" . substr($partnerProfiles, 0, strlen($partnerProfiles) - 1) . ")";
-        } else {
-            $partnerProfiles = "'{}'::jsonb";
-        }
-        $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity,profile)VALUES(:pid,:identity::VARCHAR,$partnerProfiles) ON CONFLICT (dwh_partner_id,identity) DO UPDATE SET profile=dwh_partner_identities.profile||EXCLUDED.profile RETURNING id;", ['pid' => $partnerId, 'identity' => $partnerData->identity])[0]->id;
-        try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
-            if (DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,dwh_partner_identity_id,data) VALUES (:id,:cid,:pid,:data);", ['id' => $id, 'cid' => $customerId, 'pid' => $partnerIdentityId, 'data' => json_encode($interactionData)])) { //insert data interaksi
-                DB::insert("INSERT INTO dwh_customer_to_partner(dwh_customer_id,dwh_partner_identity_id) VALUES (:cid,:pid) ON CONFLICT (dwh_customer_id, dwh_partner_identity_id) DO NOTHING;", ['cid' => $customerId, 'pid' => $partnerIdentityId]);
+            #find partner identity
+            $partnerProfiles = '';
+            foreach ($partnerData as $key => $value) {
+                if ($key != 'identity') {
+                    $partnerProfiles .= "'$key','$value',";
+                }
+            }
+            if ($partnerProfiles != '') {
+                $partnerProfiles = "jsonb_build_object(" . substr($partnerProfiles, 0, strlen($partnerProfiles) - 1) . ")";
             } else {
+                $partnerProfiles = "'{}'::jsonb";
+            }
+            $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity,profile)VALUES(:pid,:identity::VARCHAR,$partnerProfiles) ON CONFLICT (dwh_partner_id,identity) DO UPDATE SET profile=dwh_partner_identities.profile||EXCLUDED.profile RETURNING id;", ['pid' => $partnerId, 'identity' => $partnerData->identity])[0]->id;
+            try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
+                if (DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,dwh_partner_identity_id,data) VALUES (:id,:cid,:pid,:data);", ['id' => $id, 'cid' => $customerId, 'pid' => $partnerIdentityId, 'data' => json_encode($interactionData)])) { //insert data interaksi
+                    DB::insert("INSERT INTO dwh_customer_to_partner(dwh_customer_id,dwh_partner_identity_id) VALUES (:cid,:pid) ON CONFLICT (dwh_customer_id, dwh_partner_identity_id) DO NOTHING;", ['cid' => $customerId, 'pid' => $partnerIdentityId]);
+                } else {
+                    $inputData->dwh_source_id = $id;
+                    $inputData->error = "User ID $customerId Failed";
+                    Storage::append(FAILEDINPUTINTERACTIONLOG, json_encode($inputData));
+                }
+            } catch (QueryException $qe) {
                 $inputData->dwh_source_id = $id;
-                $inputData->error = "User ID $customerId Failed";
+                $inputData->error = 'User ID Failed ' . $customerId;
                 Storage::append(FAILEDINPUTINTERACTIONLOG, json_encode($inputData));
             }
-        } catch (QueryException $qe) {
-            $inputData->dwh_source_id = $id;
-            $inputData->error = 'User ID Failed ' . $customerId;
-            Storage::append(FAILEDINPUTINTERACTIONLOG, json_encode($inputData));
         }
     }
     function convertDataInputInteraction($parameter, $request, $id)
