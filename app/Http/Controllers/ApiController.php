@@ -219,6 +219,7 @@ class ApiController extends Controller
         $inputData = (object) $request->all();
         Log::info(json_encode($inputData));
         try {
+            $identityId = '';
             foreach ($inputData as $key => $value) {
                 if ($key == 'serviceno') {
                     $identityId = $value;
@@ -226,7 +227,9 @@ class ApiController extends Controller
                     $temp->{$key} = $value;
                 }
             }
-            DB::insert("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='$identityId') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,data) SELECT id,'" . json_encode($temp) . "'::jsonb FROM partner");
+            Log::info($identityId);
+            Log::info("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='$identityId') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,data) SELECT id,'" . json_encode($temp) . "'::jsonb FROM partner");
+            // DB::insert("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='$identityId') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,data) SELECT id,'" . json_encode($temp) . "'::jsonb FROM partner");
         } catch (Exception $e) {
             Log::error($e);
         }
