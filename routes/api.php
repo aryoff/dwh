@@ -15,3 +15,4 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/inputInteraction', 'App\Http\Controllers\ApiController@ApiInputInteraction');
 Route::post('/inputCustomer', 'App\Http\Controllers\ApiController@ApiInputCustomer');
+Route::post('/inputPartnerData', 'App\Http\Controllers\ApiController@ApiInputPartnerData');
