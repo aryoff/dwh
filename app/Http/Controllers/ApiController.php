@@ -77,7 +77,7 @@ class ApiController extends Controller
         }
         $contactTypeList = DB::select("SELECT id,name FROM dwh_customer_contact_types WHERE name IN ($contact_type_list)");
         $possibleCustomerId = DB::select("SELECT DISTINCT dwh_customer_contacts.dwh_customer_id AS id FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter");
-        $customerId = 0;
+        $customerId = null;
         switch (count($possibleCustomerId)) {
             case 0:
                 # user tidak ditemukan
@@ -114,13 +114,26 @@ class ApiController extends Controller
         } else {
             $partnerProfiles = "'{}'::jsonb";
         }
-        $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity,profile)VALUES(:pid,:identity::VARCHAR,$partnerProfiles) ON CONFLICT (dwh_partner_id,identity) DO UPDATE SET profile=dwh_partner_identities.profile||EXCLUDED.profile RETURNING id;", ['pid' => $partnerId, 'identity' => $partnerData->identity])[0]->id;
+        if (property_exists($partnerData, 'identity') && $partnerData->identity != '') {
+            $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity,profile)VALUES(:pid,:identity::VARCHAR,$partnerProfiles) ON CONFLICT (dwh_partner_id,identity) DO UPDATE SET profile=dwh_partner_identities.profile||EXCLUDED.profile RETURNING id;", ['pid' => $partnerId, 'identity' => $partnerData->identity])[0]->id;
+        } else {
+            $partnerIdentityId = null;
+        }
         try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
-            if (DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,dwh_partner_identity_id,data) VALUES (:id,:cid,:pid,:data);", ['id' => $id, 'cid' => $customerId, 'pid' => $partnerIdentityId, 'data' => json_encode($interactionData)])) { //insert data interaksi
+            //interaksi bisa input kalau customer null, bisa input kalo partner data null, tapi ngga bisa input kalau 2 2 nya null
+            $insertInteraction = false;
+            if ($customerId != null || $partnerIdentityId != null) {
+                $insertInteraction = DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,dwh_partner_identity_id,data) VALUES (:id,:cid,:pid,:data);", ['id' => $id, 'cid' => $customerId, 'pid' => $partnerIdentityId, 'data' => json_encode($interactionData)]);
+            }
+            if ($insertInteraction && $customerId != null && $partnerIdentityId != null) { //insert data interaksi
                 DB::insert("INSERT INTO dwh_customer_to_partner(dwh_customer_id,dwh_partner_identity_id) VALUES (:cid,:pid) ON CONFLICT (dwh_customer_id, dwh_partner_identity_id) DO NOTHING;", ['cid' => $customerId, 'pid' => $partnerIdentityId]);
-            } else {
+            } elseif (!$insertInteraction && ($customerId != null || $partnerIdentityId != null)) {
                 $inputData->dwh_source_id = $id;
-                $inputData->error = "User ID $customerId Failed";
+                if ($customerId != null) {
+                    $inputData->error = "User ID $customerId Failed";
+                } elseif ($partnerIdentityId != null) {
+                    $inputData->error = "Partner Identity ID $partnerIdentityId Failed";
+                }
                 Storage::append(FAILEDINPUTINTERACTIONLOG, json_encode($inputData));
             }
         } catch (QueryException $qe) {

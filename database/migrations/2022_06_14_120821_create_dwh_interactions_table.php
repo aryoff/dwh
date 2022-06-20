@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('dwh_interactions', function (Blueprint $table) {
             $table->foreignId('dwh_source_id')->constrained(); //sumber data (index?)
-            $table->foreignId('dwh_customer_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('dwh_partner_identity_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('dwh_customer_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('dwh_partner_identity_id')->nullable()->constrained()->cascadeOnDelete();
             if (env('DB_CONNECTION', false) == 'pgsql') {
                 $table->jsonb('data')->default('{}'); //data interaksi
             } else {
