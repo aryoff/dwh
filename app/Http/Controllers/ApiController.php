@@ -217,14 +217,19 @@ class ApiController extends Controller
         $temp = new \stdClass;
         $response->status = 'success';
         $inputData = (object) $request->all();
-        foreach ($inputData as $key => $value) {
-            if ($key == 'serviceno') {
-                $identityId = $value;
-            } else {
-                $temp->{$key} = $value;
+        Log::info(json_encode($inputData));
+        try {
+            foreach ($inputData as $key => $value) {
+                if ($key == 'serviceno') {
+                    $identityId = $value;
+                } else {
+                    $temp->{$key} = $value;
+                }
             }
+            DB::insert("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='$identityId') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,data) SELECT id,'" . json_encode($temp) . "'::jsonb FROM partner");
+        } catch (Exception $e) {
+            Log::error($e);
         }
-        DB::insert("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='$identityId') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,data) SELECT id,'" . json_encode($temp) . "'::jsonb FROM partner");
         return $response;
     }
     public function ApiInputCustomer(Request $request)
