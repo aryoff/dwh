@@ -53,6 +53,7 @@ class ApiController extends Controller
         //fields convertion
         $response = $this->convertDataInputInteraction($parameter, $request, $id);
         $customerData = $response->customerData;
+        $partner = $response->partner;
         $partnerData = $response->partnerData;
         $interactionData = $response->interactionData;
         $inputData = $response->inputData;
@@ -106,7 +107,8 @@ class ApiController extends Controller
         }
         #find partner identity
         $partnerProfiles = '';
-        foreach ($partnerData as $key => $value) {
+        $partnerDataId = null;
+        foreach ($partner as $key => $value) {
             if ($key != IDENTITY) {
                 $partnerProfiles .= "'$key','$value',";
             }
@@ -116,8 +118,11 @@ class ApiController extends Controller
         } else {
             $partnerProfiles = "'{}'::jsonb";
         }
-        if (property_exists($partnerData, IDENTITY) && $partnerData->identity != '') {
-            $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity,profile)VALUES(:pid,:identity::VARCHAR,$partnerProfiles) ON CONFLICT (dwh_partner_id,identity) DO UPDATE SET profile=dwh_partner_identities.profile||EXCLUDED.profile RETURNING id;", ['pid' => $partnerId, IDENTITY => $partnerData->identity])[0]->id;
+        if (property_exists($partner, IDENTITY) && $partner->identity != '') {
+            $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity,profile)VALUES(:pid,:identity::VARCHAR,$partnerProfiles) ON CONFLICT (dwh_partner_id,identity) DO UPDATE SET profile=dwh_partner_identities.profile||EXCLUDED.profile RETURNING id;", ['pid' => $partnerId, IDENTITY => $partner->identity])[0]->id;
+            if (property_exists($partnerData, 'identity_id') && property_exists($partnerData, 'data_id')) { // insert partner_data
+                $partnerDataId = DB::select("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='" . $partnerData->identity_id . "') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,dwh_partner_id,data_id,data) SELECT id,$partnerId,'" . $partnerData->data_id . "','" . json_encode($partnerData) . "'::jsonb-'identity_id'-'data_id' FROM partner ON CONFLICT (dwh_partner_id, data_id) DO UPDATE SET data=dwh_partner_datas.data||EXCLUDED.data,updated_at=CURRENT_TIMESTAMP RETURNING id;")[0]->id;
+            }
         } else {
             $partnerIdentityId = null;
         }
@@ -125,7 +130,7 @@ class ApiController extends Controller
             //interaksi bisa input kalau customer null, bisa input kalo partner data null, tapi ngga bisa input kalau 2 2 nya null
             $insertInteraction = false;
             if ($customerId != null || $partnerIdentityId != null) {
-                $insertInteraction = DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,dwh_partner_identity_id,data) VALUES (:id,:cid,:pid,:data);", ['id' => $id, 'cid' => $customerId, 'pid' => $partnerIdentityId, 'data' => json_encode($interactionData)]);
+                $insertInteraction = DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,dwh_partner_identity_id,dwh_partner_data_id,data) VALUES (:id,:cid,:pid,:pdid,:data);", ['id' => $id, 'cid' => $customerId, 'pid' => $partnerIdentityId, 'pdid' => $partnerDataId, 'data' => json_encode($interactionData)]);
             }
             if ($insertInteraction && $customerId != null && $partnerIdentityId != null) { //insert data interaksi
                 DB::insert("INSERT INTO dwh_customer_to_partner(dwh_customer_id,dwh_partner_identity_id) VALUES (:cid,:pid) ON CONFLICT (dwh_customer_id, dwh_partner_identity_id) DO NOTHING;", ['cid' => $customerId, 'pid' => $partnerIdentityId]);
@@ -153,6 +158,7 @@ class ApiController extends Controller
         try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
             $interactionData = new \stdClass;
             $customerData = new \stdClass;
+            $partner = new \stdClass;
             $partnerData = new \stdClass;
             $errField = array();
             $successField = array();
@@ -167,7 +173,11 @@ class ApiController extends Controller
                     $successField[] = $inputKey;
                 }
                 if (property_exists($parameter, 'partner') && property_exists($parameter->partner, $inputKey)) {
-                    $partnerData->{$parameter->partner->{$inputKey}} = $inputValue;
+                    $partner->{$parameter->partner->{$inputKey}} = $inputValue;
+                    $successField[] = $inputKey;
+                }
+                if (property_exists($parameter, 'partner_data') && property_exists($parameter->partner_data, $inputKey)) {
+                    $partnerData->{$parameter->partner_data->{$inputKey}} = $inputValue;
                     $successField[] = $inputKey;
                 }
                 if (!in_array($inputKey, $successField)) {
@@ -188,6 +198,7 @@ class ApiController extends Controller
         }
         $response->insertData = $insertData;
         $response->customerData = $customerData;
+        $response->partner = $partner;
         $response->partnerData = $partnerData;
         $response->interactionData = $interactionData;
         $response->inputData = $inputData;
