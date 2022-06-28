@@ -215,6 +215,7 @@ class ApiController extends Controller
                 Log::critical('Failed to decrypt ID from ' . $request->ip());
                 $response->status = FAILED;
             }
+        } else {
             Log::critical('Valid token not found from ' . $request->ip());
             $response->status = FAILED;
         }
