@@ -110,7 +110,7 @@ class ApiController extends Controller
         $partnerDataId = null;
         foreach ($partner as $key => $value) {
             if ($key != IDENTITY) {
-                $partnerProfiles .= "'$key','$value',";
+                $partnerProfiles .= "'$key',$$$value$$,";
             }
         }
         if ($partnerProfiles != '') {
@@ -121,7 +121,7 @@ class ApiController extends Controller
         if (property_exists($partner, IDENTITY) && $partner->identity != '') {
             $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity,profile)VALUES(:pid,:identity::VARCHAR,$partnerProfiles) ON CONFLICT (dwh_partner_id,identity) DO UPDATE SET profile=dwh_partner_identities.profile||EXCLUDED.profile RETURNING id;", ['pid' => $partnerId, IDENTITY => $partner->identity])[0]->id;
             if (property_exists($partnerData, 'identity_id') && property_exists($partnerData, 'data_id')) { // insert partner_data
-                $partnerDataId = DB::select("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='" . $partnerData->identity_id . "') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,dwh_partner_id,data_id,data) SELECT id,$partnerId,'" . $partnerData->data_id . "','" . json_encode($partnerData) . "'::jsonb-'identity_id'-'data_id' FROM partner ON CONFLICT (dwh_partner_id, data_id) DO UPDATE SET data=dwh_partner_datas.data||EXCLUDED.data,updated_at=CURRENT_TIMESTAMP RETURNING id;")[0]->id;
+                $partnerDataId = DB::select("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='" . $partnerData->identity_id . "') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,dwh_partner_id,data_id,data) SELECT id,$partnerId,'" . $partnerData->data_id . "',$$" . json_encode($partnerData) . "$$::jsonb-'identity_id'-'data_id' FROM partner ON CONFLICT (dwh_partner_id, data_id) DO UPDATE SET data=dwh_partner_datas.data||EXCLUDED.data,updated_at=CURRENT_TIMESTAMP RETURNING id;")[0]->id;
             }
         } else {
             $partnerIdentityId = null;
@@ -217,7 +217,7 @@ class ApiController extends Controller
                     $parameter = json_decode($source[0]->parameter);
                     $response = $this->convertDataInputPartnerData($parameter, (object) $request->all());
                     if (property_exists($response, 'identity_id') && property_exists($response, 'data_id')) {
-                        DB::insert("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='" . $response->identity_id . "') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,dwh_partner_id,data_id,data) SELECT id," . $source[0]->dwh_partner_id . ",'" . $response->data_id . "','" . json_encode($response->data) . "'::jsonb FROM partner ON CONFLICT (dwh_partner_id, data_id) DO UPDATE SET data=dwh_partner_datas.data||EXCLUDED.data,updated_at=CURRENT_TIMESTAMP;");
+                        DB::insert("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='" . $response->identity_id . "') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,dwh_partner_id,data_id,data) SELECT id," . $source[0]->dwh_partner_id . ",'" . $response->data_id . "',$$" . json_encode($response->data) . "$$::jsonb FROM partner ON CONFLICT (dwh_partner_id, data_id) DO UPDATE SET data=dwh_partner_datas.data||EXCLUDED.data,updated_at=CURRENT_TIMESTAMP;");
                     } else {
                         Log::critical('Key data not found from ' . $request->ip() . ' ' . $request);
                         $response->status = FAILED;
