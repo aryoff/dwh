@@ -229,6 +229,7 @@ class ApiController extends Controller
     {
         $response = new \stdClass;
         $data = new \stdClass;
+        Log::info($request);
         foreach ($request as $key => $value) {
             if (property_exists($parameter, 'partner_data') && property_exists($parameter->partner_data, $key)) {
                 $response->{$parameter->partner_data->{$key}} = $value;
