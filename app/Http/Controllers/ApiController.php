@@ -14,13 +14,15 @@ use Illuminate\Support\Facades\Storage;
 define('FAILED', 'failed');
 define('AUTHORIZATION', 'Authorization');
 define('FAILEDINPUTINTERACTIONLOG', 'ApiFailedInputInteraction.log');
+define('SUCCESS_FLAG', 'success');
+define('IDENTITY', 'identity');
 
 class ApiController extends Controller
 {
     public function ApiInputInteraction(Request $request)
     {
         $response = new \stdClass;
-        $response->status = 'success';
+        $response->status = SUCCESS_FLAG;
         try {
             $id = Crypt::decrypt($request->dwh_source_id);
             $ip = $request->ip();
@@ -105,7 +107,7 @@ class ApiController extends Controller
         #find partner identity
         $partnerProfiles = '';
         foreach ($partnerData as $key => $value) {
-            if ($key != 'identity') {
+            if ($key != IDENTITY) {
                 $partnerProfiles .= "'$key','$value',";
             }
         }
@@ -114,8 +116,8 @@ class ApiController extends Controller
         } else {
             $partnerProfiles = "'{}'::jsonb";
         }
-        if (property_exists($partnerData, 'identity') && $partnerData->identity != '') {
-            $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity,profile)VALUES(:pid,:identity::VARCHAR,$partnerProfiles) ON CONFLICT (dwh_partner_id,identity) DO UPDATE SET profile=dwh_partner_identities.profile||EXCLUDED.profile RETURNING id;", ['pid' => $partnerId, 'identity' => $partnerData->identity])[0]->id;
+        if (property_exists($partnerData, IDENTITY) && $partnerData->identity != '') {
+            $partnerIdentityId = DB::select("INSERT INTO dwh_partner_identities(dwh_partner_id,identity,profile)VALUES(:pid,:identity::VARCHAR,$partnerProfiles) ON CONFLICT (dwh_partner_id,identity) DO UPDATE SET profile=dwh_partner_identities.profile||EXCLUDED.profile RETURNING id;", ['pid' => $partnerId, IDENTITY => $partnerData->identity])[0]->id;
         } else {
             $partnerIdentityId = null;
         }
@@ -172,6 +174,9 @@ class ApiController extends Controller
                     $errField[] = $inputKey;
                 }
             }
+            if (property_exists($parameter, 'ignore')) {
+                $errField = array_diff($errField, $parameter->ignore);
+            }
             if (count($errField) > 0) {
                 $inputData->dwh_source_id = $id;
                 $inputData->err_field = $errField;
@@ -191,7 +196,7 @@ class ApiController extends Controller
     public function ApiInputPartnerData(Request $request)
     {
         $response = new \stdClass;
-        $response->status = 'success';
+        $response->status = SUCCESS_FLAG;
         try {
             $id = Crypt::decrypt($request->dwh_source_id);
             $ip = $request->ip();
@@ -260,7 +265,7 @@ class ApiController extends Controller
             date_default_timezone_set('Asia/Jakarta');
             $log_debug->log_time = date('Y-m-d H:i:s');
             Storage::append('ApiInputCustomer.log', json_encode($log_debug));
-            $response->status = 'success';
+            $response->status = SUCCESS_FLAG;
             //HACK logging temp
 
         } catch (Exception $e) {
