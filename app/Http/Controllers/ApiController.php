@@ -205,7 +205,7 @@ class ApiController extends Controller
                 if (count($source) === 1) {
                     $parameter = json_decode($source[0]->parameter);
                     $response = $this->convertDataInputPartnerData($parameter, (object) $request->all());
-                    DB::insert("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='" . $response->identityId . "') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,dwh_partner_id,data_id,data) SELECT id," . $source[0]->dwh_partner_id . "," . $response->dataId . ",'" . json_encode($response->data) . "'::jsonb FROM partner ON CONFLICT (dwh_partner_id, data_id) DO UPDATE SET data=dwh_partner_identities.data||EXCLUDED.data,updated_at=CURRENT_TIMESTAMP;");
+                    DB::insert("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='" . $response->identity_id . "') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,dwh_partner_id,data_id,data) SELECT id," . $source[0]->dwh_partner_id . "," . $response->data_id . ",'" . json_encode($response->data) . "'::jsonb FROM partner ON CONFLICT (dwh_partner_id, data_id) DO UPDATE SET data=dwh_partner_identities.data||EXCLUDED.data,updated_at=CURRENT_TIMESTAMP;");
                 } else { //Source select failed
                     Log::critical('Failed to authenticate from ' . $request->ip() . ' ' . $request);
                     $response->status = FAILED;
@@ -223,23 +223,31 @@ class ApiController extends Controller
     function convertDataInputPartnerData($parameter, $request)
     {
         $response = new \stdClass;
-        $partnerData = new \stdClass;
-        $partnerDataParameter = false;
-        if (property_exists($parameter, 'partner_data')) {
-            $partnerDataParameter = $parameter->partner_data;
-        }
+        // $partnerData = new \stdClass;
+        // $partnerDataParameter = false;
+        // if (property_exists($parameter, 'partner_data')) {
+        //     $partnerDataParameter = $parameter->partner_data;
+        // }
         foreach ($request as $key => $value) {
-            if ($partnerDataParameter && property_exists($partnerDataParameter, $key) && $partnerDataParameter->{$key} == 'identity_id') {
-                $response->identityId = $value;
-            } elseif ($partnerDataParameter && property_exists($partnerDataParameter, $key) && $partnerDataParameter->{$key} == 'data_id') {
-                $response->dataId = $value;
-            } elseif ($partnerDataParameter && property_exists($partnerDataParameter, $key)) {
-                $partnerData->{$partnerDataParameter->{$key}} = $value;
+            if (property_exists($parameter, 'partner_data') && property_exists($parameter->interaction, $key)) {
+                $response->{$parameter->partner_data->{$key}} = $value;
             } else {
-                $partnerData->{$key} = $value;
+                $response->data->{$key} = $value;
             }
+
+
+
+            // if ($partnerDataParameter && property_exists($partnerDataParameter, $key) && $partnerDataParameter->{$key} == 'identity_id') {
+            //     $response->identityId = $value;
+            // } elseif ($partnerDataParameter && property_exists($partnerDataParameter, $key) && $partnerDataParameter->{$key} == 'data_id') {
+            //     $response->dataId = $value;
+            // } elseif ($partnerDataParameter && property_exists($partnerDataParameter, $key)) {
+            //     $partnerData->{$partnerDataParameter->{$key}} = $value;
+            // } else {
+            //     $partnerData->{$key} = $value;
+            // }
         }
-        $response->data = $partnerData;
+        // $response->data = $partnerData;
         return $response;
     }
     public function ApiInputCustomer(Request $request)
