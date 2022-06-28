@@ -197,7 +197,7 @@ class ApiController extends Controller
     {
         $response = new \stdClass;
         $response->status = SUCCESS_FLAG;
-        if ($request->bearerToken() != '') {
+        if ($request->bearerToken() !== '') {
             try {
                 $id = Crypt::decrypt($request->bearerToken());
                 $ip = $request->ip();
@@ -215,7 +215,6 @@ class ApiController extends Controller
                 $response->status = FAILED;
             }
         } else {
-            Log::info($request->header());
             Log::critical('Valid token not found from ' . $request->ip());
             $response->status = FAILED;
         }
