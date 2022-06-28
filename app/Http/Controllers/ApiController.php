@@ -229,7 +229,7 @@ class ApiController extends Controller
     {
         $response = new \stdClass;
         foreach ($request as $key => $value) {
-            if (property_exists($parameter, 'partner_data') && property_exists($parameter->partner_dataa, $key)) {
+            if (property_exists($parameter, 'partner_data') && property_exists($parameter->partner_data, $key)) {
                 $response->{$parameter->partner_data->{$key}} = $value;
             } else {
                 $response->data->{$key} = $value;
