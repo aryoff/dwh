@@ -13,23 +13,20 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('dwh_partner_datas', function (Blueprint $table) {
+        Schema::create('dwh_employees', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('dwh_partner_id')->constrained()->cascadeOnDelete();
-            $table->string('data_id');
-            $table->foreignId('dwh_partner_identity_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->string('simduk')->unique()->nullable();
             if (env('DB_CONNECTION', false) == 'pgsql') {
-                $table->jsonb('data')->default('{}'); //data diri customer
+                $table->jsonb('profile')->default('{}');
             } else {
-                $table->json('data')->default('{}');
+                $table->json('profile')->default('{}');
             }
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
-            $table->index('dwh_partner_identity_id');
-            $table->unique(['dwh_partner_id', 'data_id']);
         });
         if (env('DB_CONNECTION', false) == 'pgsql') {
-            DB::statement('CREATE INDEX dwh_partner_datas_datagin ON dwh_partner_datas USING gin ((data))');
+            DB::statement('CREATE INDEX dwh_employees_profilegin ON dwh_employees USING gin ((profile))');
         }
     }
 
@@ -40,6 +37,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('dwh_partner_datas');
+        Schema::dropIfExists('dwh_employees');
     }
 };

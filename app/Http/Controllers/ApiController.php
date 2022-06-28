@@ -156,40 +156,17 @@ class ApiController extends Controller
             $successField = array();
             $successField[] = 'dwh_source_id';
             foreach ($inputData as $inputKey => $inputValue) {
-                foreach ($parameter as $fieldKey => $fieldValue) {
-                    switch ($fieldKey) {
-                        case 'interaction':
-                            foreach ($fieldValue as $field) {
-                                if ($inputKey == $field->source) {
-                                    $interactionData->{$field->target} = $inputValue;
-                                    $successField[] = $inputKey;
-                                }
-                            }
-                            break;
-                        case 'customer':
-                            foreach ($fieldValue as $field) {
-                                if ($inputKey == $field->source) {
-                                    $customerData->{$field->target} = $inputValue;
-                                    $successField[] = $inputKey;
-                                }
-                            }
-                            break;
-                        case 'partner':
-                            foreach ($fieldValue as $field) {
-                                if ($inputKey == $field->source) {
-                                    $partnerData->{$field->target} = $inputValue;
-                                    $successField[] = $inputKey;
-                                }
-                            }
-                            break;
-                        default: //check ignored fields
-                            foreach ($fieldValue as $field) {
-                                if ($inputKey == $field) {
-                                    $successField[] = $inputKey;
-                                }
-                            }
-                            break;
-                    }
+                if (property_exists($parameter, 'interaction') && property_exists($parameter->interaction, $inputKey)) {
+                    $interactionData->{$parameter->interaction->{$inputKey}} = $inputValue;
+                    $successField[] = $inputKey;
+                }
+                if (property_exists($parameter, 'customer') && property_exists($parameter->customer, $inputKey)) {
+                    $customerData->{$parameter->customer->{$inputKey}} = $inputValue;
+                    $successField[] = $inputKey;
+                }
+                if (property_exists($parameter, 'partner') && property_exists($parameter->partner, $inputKey)) {
+                    $partnerData->{$parameter->partner->{$inputKey}} = $inputValue;
+                    $successField[] = $inputKey;
                 }
                 if (!in_array($inputKey, $successField)) {
                     $errField[] = $inputKey;
@@ -214,22 +191,52 @@ class ApiController extends Controller
     public function ApiInputPartnerData(Request $request)
     {
         $response = new \stdClass;
-        $temp = new \stdClass;
         $response->status = 'success';
-        $inputData = (object) $request->all();
         try {
-            $identityId = '';
-            foreach ($inputData as $key => $value) {
-                if ($key == 'serviceno') {
-                    $identityId = $value;
-                } else {
-                    $temp->{$key} = $value;
-                }
+            $id = Crypt::decrypt($request->dwh_source_id);
+            $ip = $request->ip();
+            $header = '';
+            if ($request->hasHeader(AUTHORIZATION)) {
+                $header = $request->header(AUTHORIZATION);
+                $header = base64_decode(substr($header, 6, strlen($header) - 6));
             }
-            DB::insert("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='$identityId') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,data) SELECT id,'" . json_encode($temp) . "'::jsonb FROM partner");
-        } catch (Exception $e) {
-            Log::error($e);
+            $username = substr($header, 0, strpos($header, ':'));
+            $password = substr($header, strpos($header, ':') + 1, strlen($header) - strpos($header, ':') + 1);
+            $source = DB::select("SELECT parameter->'field' AS parameter,dwh_partner_id FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND parameter @> jsonb_build_object('username',username) AND parameter @> jsonb_build_object('password',password) AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip, 'username' => $username, 'password' => $password]); //ambil parameter dari table source sesuai dengan id
+            if (count($source) === 1) {
+                $parameter = json_decode($source[0]->parameter);
+                $response = $this->convertDataInputPartnerData($parameter, (object) $request->all());
+                DB::insert("WITH partner AS(SELECT id FROM dwh_partner_identities WHERE identity='" . $response->identityId . "') INSERT INTO dwh_partner_datas(dwh_partner_identity_id,dwh_partner_id,data_id,data) SELECT id," . $source[0]->dwh_partner_id . "," . $response->dataId . ",'" . json_encode($response->data) . "'::jsonb FROM partner ON CONFLICT (dwh_partner_id, data_id) DO UPDATE SET data=dwh_partner_identities.data||EXCLUDED.data,updated_at=CURRENT_TIMESTAMP;");
+            } else { //Source select failed
+                Log::critical('Failed to authenticate from ' . $request->ip() . ' ' . $request);
+                $response->status = FAILED;
+            }
+        } catch (DecryptException $decryptErr) { //Decryption failed
+            Log::critical('Failed to decrypt ID from ' . $request->ip());
+            $response->status = FAILED;
         }
+        return $response;
+    }
+    function convertDataInputPartnerData($parameter, $request)
+    {
+        $response = new \stdClass;
+        $partnerData = new \stdClass;
+        $partnerDataParameter = false;
+        if (property_exists($parameter, 'partner_data')) {
+            $partnerDataParameter = $parameter->partner_data;
+        }
+        foreach ($request as $key => $value) {
+            if ($partnerDataParameter && property_exists($partnerDataParameter, $key) && $partnerDataParameter->{$key} == 'identity_id') {
+                $response->identityId = $value;
+            } elseif ($partnerDataParameter && property_exists($partnerDataParameter, $key) && $partnerDataParameter->{$key} == 'data_id') {
+                $response->dataId = $value;
+            } elseif ($partnerDataParameter && property_exists($partnerDataParameter, $key)) {
+                $partnerData->{$partnerDataParameter->{$key}} = $value;
+            } else {
+                $partnerData->{$key} = $value;
+            }
+        }
+        $response->data = $partnerData;
         return $response;
     }
     public function ApiInputCustomer(Request $request)

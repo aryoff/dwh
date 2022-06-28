@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('dwh_source_id')->constrained(); //sumber data (index?)
             $table->foreignId('dwh_customer_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('dwh_partner_identity_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('dwh_partner_data_id')->nullable()->constrained()->cascadeOnDelete();
             if (env('DB_CONNECTION', false) == 'pgsql') {
                 $table->jsonb('data')->default('{}'); //data interaksi
             } else {
@@ -27,6 +28,7 @@ return new class extends Migration
             $table->index('dwh_partner_identity_id');
             $table->index('dwh_source_id');
             $table->index('dwh_customer_id');
+            $table->index('dwh_partner_data_id');
         });
         if (env('DB_CONNECTION', false) == 'pgsql') {
             DB::statement('CREATE INDEX dwh_interactions_datagin ON dwh_interactions USING gin ((data))');
