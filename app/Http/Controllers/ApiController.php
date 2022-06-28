@@ -228,31 +228,13 @@ class ApiController extends Controller
     function convertDataInputPartnerData($parameter, $request)
     {
         $response = new \stdClass;
-        // $partnerData = new \stdClass;
-        // $partnerDataParameter = false;
-        // if (property_exists($parameter, 'partner_data')) {
-        //     $partnerDataParameter = $parameter->partner_data;
-        // }
         foreach ($request as $key => $value) {
-            if (property_exists($parameter, 'partner_data') && property_exists($parameter->interaction, $key)) {
+            if (property_exists($parameter, 'partner_data') && property_exists($parameter->partner_dataa, $key)) {
                 $response->{$parameter->partner_data->{$key}} = $value;
             } else {
                 $response->data->{$key} = $value;
             }
-
-
-
-            // if ($partnerDataParameter && property_exists($partnerDataParameter, $key) && $partnerDataParameter->{$key} == 'identity_id') {
-            //     $response->identityId = $value;
-            // } elseif ($partnerDataParameter && property_exists($partnerDataParameter, $key) && $partnerDataParameter->{$key} == 'data_id') {
-            //     $response->dataId = $value;
-            // } elseif ($partnerDataParameter && property_exists($partnerDataParameter, $key)) {
-            //     $partnerData->{$partnerDataParameter->{$key}} = $value;
-            // } else {
-            //     $partnerData->{$key} = $value;
-            // }
         }
-        // $response->data = $partnerData;
         return $response;
     }
     public function ApiInputCustomer(Request $request)
