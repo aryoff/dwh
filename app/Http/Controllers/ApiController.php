@@ -216,6 +216,7 @@ class ApiController extends Controller
                 $response->status = FAILED;
             }
         } else {
+            Log::info($request->header());
             Log::critical('Valid token not found from ' . $request->ip());
             $response->status = FAILED;
         }
