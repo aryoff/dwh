@@ -197,10 +197,9 @@ class ApiController extends Controller
     {
         $response = new \stdClass;
         $response->status = SUCCESS_FLAG;
-        if ($request->hasHeader('dwh_token')) {
-            Log::info(json_encode((object) $request->all()));
+        if ($request->bearerToken() != '') {
             try {
-                $id = Crypt::decrypt($request->header('dwh_token'));
+                $id = Crypt::decrypt($request->bearerToken());
                 $ip = $request->ip();
                 $source = DB::select("SELECT parameter->'field' AS parameter,dwh_partner_id FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND parameter @> jsonb_build_object('username',username) AND parameter @> jsonb_build_object('password',password) AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip]); //ambil parameter dari table source sesuai dengan id
                 if (count($source) === 1) {
