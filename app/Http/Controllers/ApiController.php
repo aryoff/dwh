@@ -198,6 +198,7 @@ class ApiController extends Controller
         $response = new \stdClass;
         $response->status = SUCCESS_FLAG;
         if ($request->hasHeader('dwh_token')) {
+            Log::info(json_encode((object) $request->all()));
             try {
                 $id = Crypt::decrypt($request->header('dwh_token'));
                 $ip = $request->ip();
