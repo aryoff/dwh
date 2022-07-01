@@ -26,7 +26,7 @@ class ApiController extends Controller
         if (property_exists($request, 'dwh_source_id')) {
             $sourceId = $request->dwh_source_id;
             Log::info('old ' . $sourceId);
-        } elseif ($request->bearerToken() !== '') {
+        } elseif ($request->bearerToken() != '') {
             $sourceId = $request->bearerToken();
             Log::info('bearer ' . $sourceId);
         } else {
@@ -224,7 +224,7 @@ class ApiController extends Controller
     {
         $response = new \stdClass;
         $response->status = SUCCESS_FLAG;
-        if ($request->bearerToken() !== '') {
+        if ($request->bearerToken() != '') {
             try {
                 $id = Crypt::decrypt($request->bearerToken());
                 $ip = $request->ip();
