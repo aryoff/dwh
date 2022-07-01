@@ -25,10 +25,10 @@ class ApiController extends Controller
         $response->status = SUCCESS_FLAG;
         if (property_exists($request, 'dwh_source_id')) {
             $sourceId = $request->dwh_source_id;
-            Log::info($sourceId);
+            Log::info('old ' . $sourceId);
         } elseif ($request->bearerToken() !== '') {
             $sourceId = $request->bearerToken();
-            Log::info($sourceId);
+            Log::info('bearer ' . $sourceId);
         } else {
             Log::critical('No valid ID from ' . $request->ip());
             $response->status = FAILED;
