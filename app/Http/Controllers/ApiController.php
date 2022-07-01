@@ -143,7 +143,7 @@ class ApiController extends Controller
         #find partner identity
         $tempPartner = $this->findPartnerIdentityId($partnerId, $partner, $partnerData);
         $partnerIdentityId = $tempPartner->partnerIdentityId;
-        $partnerDataId = $response->partnerDataId;
+        $partnerDataId = $tempPartner->partnerDataId;
         if (!empty((array) $employee)) {
             $employeeQuery = DB::select("SELECT id FROM dwh_employees WHERE profile->'dwh_source' @> jsonb_build_object('" . $id . "','" . $employee->agent_id . "')");
             if (count($employeeQuery) > 0) {
