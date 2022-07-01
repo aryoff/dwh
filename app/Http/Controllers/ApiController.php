@@ -30,9 +30,10 @@ class ApiController extends Controller
             $sourceId = $request->bearerToken();
             Log::info('bearer ' . $sourceId);
         } else {
-            Log::critical('No valid ID from ' . $request->ip());
-            $response->status = FAILED;
-            return $response;
+            // Log::critical('No valid ID from ' . $request->ip());
+            // $response->status = FAILED;
+            // return $response;
+            Log::info(json_encode($request));
         }
         try {
             $id = Crypt::decrypt($request->dwh_source_id);
