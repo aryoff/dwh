@@ -48,19 +48,8 @@ class ApiController extends Controller
         }
         return $response;
     }
-    function executeInputInteraction($source, $request, $id)
+    function findCustomerId(object $customerData)
     {
-        $parameter = json_decode($source[0]->parameter);
-        $partnerId = $source[0]->dwh_partner_id;
-        //fields convertion
-        $response = $this->convertDataInputInteraction($parameter, $request, $id);
-        $customerData = $response->customerData;
-        $partner = $response->partner;
-        $partnerData = $response->partnerData;
-        $interactionData = $response->interactionData;
-        $inputData = $response->inputData;
-        $employee = $response->employee;
-        // //find customer id
         $contact_filter = "";
         foreach ($customerData as $key => $value) {
             if ($key != 'nama') {
@@ -108,7 +97,10 @@ class ApiController extends Controller
                 $customerId = DB::select("SELECT dwh_customer_contacts.dwh_customer_id AS id,priority FROM dwh_customer_contacts INNER JOIN dwh_customer_contact_types ON dwh_customer_contact_types.id=dwh_customer_contact_type_id WHERE $contact_filter ORDER BY priority ASC")[0]->id; //ambil customer id yg paling prioritas
                 break;
         }
-        #find partner identity
+        return $customerId;
+    }
+    function findPartnerIdentityId($partnerId, object $partner, object $partnerData)
+    {
         $partnerProfiles = '';
         $partnerDataId = null;
         foreach ($partner as $key => $value) {
@@ -129,6 +121,29 @@ class ApiController extends Controller
         } else {
             $partnerIdentityId = null;
         }
+        $response = new \stdClass;
+        $response->partnerIdentityId = $partnerIdentityId;
+        $response->partnerDataId = $partnerDataId;
+        return $response;
+    }
+    function executeInputInteraction($source, $request, $id)
+    {
+        $parameter = json_decode($source[0]->parameter);
+        $partnerId = $source[0]->dwh_partner_id;
+        //fields convertion
+        $response = $this->convertDataInputInteraction($parameter, $request, $id);
+        $customerData = $response->customerData;
+        $partner = $response->partner;
+        $partnerData = $response->partnerData;
+        $interactionData = $response->interactionData;
+        $inputData = $response->inputData;
+        $employee = $response->employee;
+        // //find customer id
+        $customerId = $this->findCustomerId($customerData);
+        #find partner identity
+        $tempPartner = $this->findPartnerIdentityId($partnerId, $partner, $partnerData);
+        $partnerIdentityId = $tempPartner->partnerIdentityId;
+        $partnerDataId = $response->partnerDataId;
         if (!empty((array) $employee)) {
             $employeeQuery = DB::select("SELECT id FROM dwh_employees WHERE profile->'dwh_source' @> jsonb_build_object('" . $id . "','" . $employee->agent_id . "')");
             if (count($employeeQuery) > 0) {
