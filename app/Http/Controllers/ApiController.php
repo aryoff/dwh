@@ -135,7 +135,7 @@ class ApiController extends Controller
             if (count($employeeQuery) > 0) {
                 $employeeID = $employeeQuery[0]->id;
             } else {
-                $employeeID = DB::insert("INSERT INTO dwh_employees(name,profile) VALUES (:agent_name,jsonb_build_object('dwh_source',jsonb_build_object(:source_id::VARCHAR,:agent_id)))", ['agent_name' => $employee->agent_name, 'source_id' => $id, 'agent_id' => $employee->agent_id]);
+                $employeeID = DB::insert("INSERT INTO dwh_employees(name,profile) VALUES (:agent_name,jsonb_build_object('dwh_source',jsonb_build_object(:source_id::VARCHAR,:agent_id::VARCHAR)))", ['agent_name' => $employee->agent_name, 'source_id' => $id, 'agent_id' => $employee->agent_id]);
             }
             $interactionData->agent_id = $employeeID;
         }
