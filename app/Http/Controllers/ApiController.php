@@ -23,17 +23,16 @@ class ApiController extends Controller
     {
         $response = new \stdClass;
         $response->status = SUCCESS_FLAG;
-        if (property_exists($request, 'dwh_source_id')) {
+        if ($request->has('dwh_source_id')) {
             $sourceId = $request->dwh_source_id;
             Log::info('old ' . $sourceId);
         } elseif ($request->bearerToken() != '') {
             $sourceId = $request->bearerToken();
             Log::info('bearer ' . $sourceId);
         } else {
-            // Log::critical('No valid ID from ' . $request->ip());
-            // $response->status = FAILED;
-            // return $response;
-            Log::info(json_encode((object) $request->all()));
+            Log::critical('No valid ID from ' . $request->ip());
+            $response->status = FAILED;
+            return $response;
         }
         try {
             $id = Crypt::decrypt($request->dwh_source_id);
