@@ -23,9 +23,9 @@ class ApiController extends Controller
     {
         $response = new \stdClass;
         $response->status = SUCCESS_FLAG;
-        if ($request->has('dwh_source_id')) {
+        if ($request->has('dwh_source_id')) { //old verification
             $sourceId = $request->dwh_source_id;
-        } elseif ($request->bearerToken() != '') {
+        } elseif ($request->bearerToken() != '') { //bearer token verification
             $sourceId = $request->bearerToken();
         } else {
             Log::critical('No valid ID from ' . $request->ip());
@@ -59,6 +59,7 @@ class ApiController extends Controller
         $partnerData = $response->partnerData;
         $interactionData = $response->interactionData;
         $inputData = $response->inputData;
+        $employee = $response->employee;
         // //find customer id
         $contact_filter = "";
         foreach ($customerData as $key => $value) {
@@ -127,6 +128,15 @@ class ApiController extends Controller
             }
         } else {
             $partnerIdentityId = null;
+        }
+        if (!empty($employee)) {
+            $employeeQuery = DB::select("SELECT id FROM dwh_employees WHERE profile->'dwh_source' @> jsonb_build_object('" . $id . "','" . $employee->agent_id . "')");
+            if (count($employeeQuery) > 0) {
+                $employeeID = $employeeQuery[0]->id;
+            } else {
+                $employeeID = DB::insert("INSERT INTO dwh_employees(name,profile) VALUES (:agent_name,jsonb_build_object('dwh_source',jsonb_build_object(:source_id::VARCHAR,:agent_id)))", ['agent_name' => $employee->agent_name, 'source_id' => $id, 'agent_id' => $employee->agent_id]);
+            }
+            $interactionData->agent_id = $employeeID;
         }
         try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
             //interaksi bisa input kalau customer null, bisa input kalo partner data null, tapi ngga bisa input kalau 2 2 nya null
@@ -216,6 +226,7 @@ class ApiController extends Controller
         $response->employee = $employee;
         $response->interactionData = $interactionData;
         $response->inputData = $inputData;
+        $response->employee = $employee;
         return $response;
     }
     public function ApiInputPartnerData(Request $request)
