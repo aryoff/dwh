@@ -33,7 +33,7 @@ class ApiController extends Controller
             // Log::critical('No valid ID from ' . $request->ip());
             // $response->status = FAILED;
             // return $response;
-            Log::info(json_encode($request));
+            Log::info(json_encode((object) $request->all()));
         }
         try {
             $id = Crypt::decrypt($request->dwh_source_id);
