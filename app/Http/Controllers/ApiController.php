@@ -25,17 +25,15 @@ class ApiController extends Controller
         $response->status = SUCCESS_FLAG;
         if ($request->has('dwh_source_id')) {
             $sourceId = $request->dwh_source_id;
-            Log::info('old ' . $sourceId);
         } elseif ($request->bearerToken() != '') {
             $sourceId = $request->bearerToken();
-            Log::info('bearer ' . $sourceId);
         } else {
             Log::critical('No valid ID from ' . $request->ip());
             $response->status = FAILED;
             return $response;
         }
         try {
-            $id = Crypt::decrypt($request->dwh_source_id);
+            $id = Crypt::decrypt($sourceId);
             $ip = $request->ip();
             $source = DB::select("SELECT parameter->'field' AS parameter,dwh_partner_id FROM dwh_sources CROSS JOIN (SELECT :ip AS ip) params WHERE id = :id AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip]); //ambil parameter dari table source sesuai dengan id
             if (count($source) === 1) {
