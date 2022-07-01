@@ -131,7 +131,8 @@ class ApiController extends Controller
         }
         if (!empty($employee)) {
             Log::info(json_encode($employee));
-            // $employeeQuery = DB::select("SELECT id FROM dwh_employees WHERE profile->'dwh_source' @> jsonb_build_object('" . $id . "','" . $employee->agent_id . "')");
+            $employeeQuery = DB::select("SELECT id FROM dwh_employees WHERE profile->'dwh_source' @> jsonb_build_object('" . $id . "','" . $employee->agent_id . "')");
+            Log::info(json_encode($employeeQuery));
             // if (count($employeeQuery) > 0) {
             //     $employeeID = $employeeQuery[0]->id;
             // } else {
