@@ -33,6 +33,7 @@ class ApiController extends Controller
             return $response;
         }
         try {
+            Log::info($sourceId);
             $id = Crypt::decrypt($sourceId);
             $ip = $request->ip();
             $source = DB::select("SELECT parameter->'field' AS parameter,dwh_partner_id FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip]); //ambil parameter dari table source sesuai dengan id
