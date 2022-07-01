@@ -131,12 +131,13 @@ class ApiController extends Controller
         }
         if (!empty($employee)) {
             $employeeQuery = DB::select("SELECT id FROM dwh_employees WHERE profile->'dwh_source' @> jsonb_build_object('" . $id . "','" . $employee->agent_id . "')");
-            if (count($employeeQuery) > 0) {
-                $employeeID = $employeeQuery[0]->id;
-            } else {
-                $employeeID = DB::insert("INSERT INTO dwh_employees(name,profile) VALUES (:agent_name,jsonb_build_object('dwh_source',jsonb_build_object(:source_id::VARCHAR,:agent_id)))", ['agent_name' => $employee->agent_name, 'source_id' => $id, 'agent_id' => $employee->agent_id]);
-            }
-            $interactionData->agent_id = $employeeID;
+            Log::info(json_encode($employee));
+            // if (count($employeeQuery) > 0) {
+            //     $employeeID = $employeeQuery[0]->id;
+            // } else {
+            //     $employeeID = DB::insert("INSERT INTO dwh_employees(name,profile) VALUES (:agent_name,jsonb_build_object('dwh_source',jsonb_build_object(:source_id::VARCHAR,:agent_id)))", ['agent_name' => $employee->agent_name, 'source_id' => $id, 'agent_id' => $employee->agent_id]);
+            // }
+            // $interactionData->agent_id = $employeeID;
         }
         try { //masukkan data interaksi ke dalam tabel sesuai dengan field yg di deklarasikan
             //interaksi bisa input kalau customer null, bisa input kalo partner data null, tapi ngga bisa input kalau 2 2 nya null
