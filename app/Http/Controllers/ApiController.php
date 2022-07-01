@@ -130,6 +130,7 @@ class ApiController extends Controller
             $partnerIdentityId = null;
         }
         if (!empty((array) $employee)) {
+            Log::info(json_encode($employee));
             $employeeQuery = DB::select("SELECT id FROM dwh_employees WHERE profile->'dwh_source' @> jsonb_build_object('" . $id . "','" . $employee->agent_id . "')");
             if (count($employeeQuery) > 0) {
                 $employeeID = $employeeQuery[0]->id;
