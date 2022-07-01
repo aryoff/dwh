@@ -153,7 +153,7 @@ class ApiController extends Controller
             Storage::append(FAILEDINPUTINTERACTIONLOG, json_encode($inputData));
         }
     }
-    function checkAndAssign(object $container, object $parameter, string $category, array $successField, string $inputKey, string $inputValue)
+    function checkAndAssign(object $container, object $parameter, string $category, array $successField, string $inputKey, $inputValue)
     {
         $temp = new \stdClass;
         $temp->successField = $successField;
