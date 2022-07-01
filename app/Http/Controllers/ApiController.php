@@ -23,17 +23,19 @@ class ApiController extends Controller
     {
         $response = new \stdClass;
         $response->status = SUCCESS_FLAG;
+        if (property_exists($request, 'dwh_source_id')) {
+            $sourceId = $request->dwh_source_id;
+        } elseif ($request->bearerToken() !== '') {
+            $sourceId = $request->bearerToken();
+        } else {
+            Log::critical('No valid ID from ' . $request->ip());
+            $response->status = FAILED;
+            return $response;
+        }
         try {
-            $id = Crypt::decrypt($request->dwh_source_id);
+            $id = Crypt::decrypt($sourceId);
             $ip = $request->ip();
-            $header = '';
-            if ($request->hasHeader(AUTHORIZATION)) {
-                $header = $request->header(AUTHORIZATION);
-                $header = base64_decode(substr($header, 6, strlen($header) - 6));
-            }
-            $username = substr($header, 0, strpos($header, ':'));
-            $password = substr($header, strpos($header, ':') + 1, strlen($header) - strpos($header, ':') + 1);
-            $source = DB::select("SELECT parameter->'field' AS parameter,dwh_partner_id FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND parameter @> jsonb_build_object('username',username) AND parameter @> jsonb_build_object('password',password) AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip, 'username' => $username, 'password' => $password]); //ambil parameter dari table source sesuai dengan id
+            $source = DB::select("SELECT parameter->'field' AS parameter,dwh_partner_id FROM dwh_sources CROSS JOIN (SELECT :ip AS ip,:username AS username,:password AS password) params WHERE id = :id AND jsonb_exists(parameter->'allowed_ip', ip)", ['id' => $id, 'ip' => $ip]); //ambil parameter dari table source sesuai dengan id
             if (count($source) === 1) {
                 $this->executeInputInteraction($source, (object) $request->all(), $id);
             } else { //Source select failed
@@ -149,6 +151,17 @@ class ApiController extends Controller
             Storage::append(FAILEDINPUTINTERACTIONLOG, json_encode($inputData));
         }
     }
+    function checkAndAssign(object $container, object $parameter, string $category, array $successField, string $inputKey, string $inputValue)
+    {
+        $temp = new \stdClass;
+        $temp->successField = $successField;
+        $temp->container = $container;
+        if (property_exists($parameter, $category) && property_exists($parameter->{$category}, $inputKey)) {
+            $temp->container->{$parameter->{$category}->{$inputKey}} = $inputValue;
+            $temp->successField[] = $inputKey;
+        }
+        return $temp;
+    }
     function convertDataInputInteraction($parameter, $request, $id)
     {
         $response = new \stdClass;
@@ -160,26 +173,26 @@ class ApiController extends Controller
             $customerData = new \stdClass;
             $partner = new \stdClass;
             $partnerData = new \stdClass;
+            $employee = new \stdClass;
             $errField = array();
             $successField = array();
             $successField[] = 'dwh_source_id';
             foreach ($inputData as $inputKey => $inputValue) {
-                if (property_exists($parameter, 'interaction') && property_exists($parameter->interaction, $inputKey)) {
-                    $interactionData->{$parameter->interaction->{$inputKey}} = $inputValue;
-                    $successField[] = $inputKey;
-                }
-                if (property_exists($parameter, 'customer') && property_exists($parameter->customer, $inputKey)) {
-                    $customerData->{$parameter->customer->{$inputKey}} = $inputValue;
-                    $successField[] = $inputKey;
-                }
-                if (property_exists($parameter, 'partner') && property_exists($parameter->partner, $inputKey)) {
-                    $partner->{$parameter->partner->{$inputKey}} = $inputValue;
-                    $successField[] = $inputKey;
-                }
-                if (property_exists($parameter, 'partner_data') && property_exists($parameter->partner_data, $inputKey)) {
-                    $partnerData->{$parameter->partner_data->{$inputKey}} = $inputValue;
-                    $successField[] = $inputKey;
-                }
+                $tempContainer = $this->checkAndAssign($interactionData, $parameter, 'interaction', $successField, $inputKey, $inputValue);
+                $interactionData = $tempContainer->container;
+                $successField = $tempContainer->successField;
+                $tempContainer = $this->checkAndAssign($customerData, $parameter, 'customer', $successField, $inputKey, $inputValue);
+                $customerData = $tempContainer->container;
+                $successField = $tempContainer->successField;
+                $tempContainer = $this->checkAndAssign($partner, $parameter, 'partner', $successField, $inputKey, $inputValue);
+                $partner = $tempContainer->container;
+                $successField = $tempContainer->successField;
+                $tempContainer = $this->checkAndAssign($partnerData, $parameter, 'partner_data', $successField, $inputKey, $inputValue);
+                $partnerData = $tempContainer->container;
+                $successField = $tempContainer->successField;
+                $tempContainer = $this->checkAndAssign($employee, $parameter, 'employee', $successField, $inputKey, $inputValue);
+                $employee = $tempContainer->container;
+                $successField = $tempContainer->successField;
                 if (!in_array($inputKey, $successField)) {
                     $errField[] = $inputKey;
                 }
@@ -200,6 +213,7 @@ class ApiController extends Controller
         $response->customerData = $customerData;
         $response->partner = $partner;
         $response->partnerData = $partnerData;
+        $response->employee = $employee;
         $response->interactionData = $interactionData;
         $response->inputData = $inputData;
         return $response;
