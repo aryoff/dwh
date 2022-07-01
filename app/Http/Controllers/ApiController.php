@@ -16,6 +16,7 @@ define('AUTHORIZATION', 'Authorization');
 define('FAILEDINPUTINTERACTIONLOG', 'ApiFailedInputInteraction.log');
 define('SUCCESS_FLAG', 'success');
 define('IDENTITY', 'identity');
+define('EMPTY_OBJECT', new \stdClass);
 
 class ApiController extends Controller
 {
@@ -129,7 +130,7 @@ class ApiController extends Controller
         } else {
             $partnerIdentityId = null;
         }
-        if ($employee->count() > 0) {
+        if ($employee != EMPTY_OBJECT) {
             Log::info(json_encode($employee));
             $employeeQuery = DB::select("SELECT id FROM dwh_employees WHERE profile->'dwh_source' @> jsonb_build_object('" . $id . "','" . $employee->agent_id . "')");
             Log::info(json_encode($employeeQuery));
