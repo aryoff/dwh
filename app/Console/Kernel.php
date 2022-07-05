@@ -16,9 +16,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
-        $API = new ApiController();
-        $schedule->call($API->cronLogInputInteraction())->everyMinute()->withoutOverlapping();
+        $schedule->call(function () {
+            $API = new ApiController();
+            $API->cronLogInputInteraction();
+        })->everyMinute()->withoutOverlapping();
     }
 
     /**
