@@ -137,12 +137,12 @@ class ApiController extends Controller
             unset($request->err_field);
             unset($request->log_time);
             $source = DB::select("SELECT parameter->'field' AS parameter,dwh_partner_id FROM dwh_sources WHERE id = :id", ['id' => $id]);
-            if ($this->executeInputInteraction($source, $request, $id)) {
+            if ($this->executeInputInteraction($source, $request, $id, $log_time)) {
                 DB::delete("DELETE FROM dwh_failed_inputs WHERE id=?", [$row->id]);
             }
         }
     }
-    function executeInputInteraction($source, $request, $id)
+    function executeInputInteraction($source, $request, $id, $custom_datetime = null)
     {
         $parameter = json_decode($source[0]->parameter);
         $partnerId = $source[0]->dwh_partner_id;
@@ -173,7 +173,13 @@ class ApiController extends Controller
             //interaksi bisa input kalau customer null, bisa input kalo partner data null, tapi ngga bisa input kalau 2 2 nya null
             $insertInteraction = false;
             if ($customerId != null || $partnerIdentityId != null) {
-                $insertInteraction = DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,dwh_partner_identity_id,dwh_partner_data_id,data) VALUES (:id,:cid,:pid,:pdid,:data);", ['id' => $id, 'cid' => $customerId, 'pid' => $partnerIdentityId, 'pdid' => $partnerDataId, 'data' => json_encode($interactionData)]);
+                $custom_timestamp_insert = '';
+                $custom_timestamp_data = '';
+                if ($custom_datetime != null) {
+                    $custom_timestamp_insert = ',created_at,updated_at';
+                    $custom_timestamp_data = ",'$custom_datetime','$custom_datetime'";
+                }
+                $insertInteraction = DB::insert("INSERT INTO dwh_interactions(dwh_source_id,dwh_customer_id,dwh_partner_identity_id,dwh_partner_data_id,data$custom_timestamp_insert) VALUES (:id,:cid,:pid,:pdid,:data$custom_timestamp_data);", ['id' => $id, 'cid' => $customerId, 'pid' => $partnerIdentityId, 'pdid' => $partnerDataId, 'data' => json_encode($interactionData)]);
             }
             if ($insertInteraction && $customerId != null && $partnerIdentityId != null) { //insert data interaksi
                 DB::insert("INSERT INTO dwh_customer_to_partner(dwh_customer_id,dwh_partner_identity_id) VALUES (:cid,:pid) ON CONFLICT (dwh_customer_id, dwh_partner_identity_id) DO NOTHING;", ['cid' => $customerId, 'pid' => $partnerIdentityId]);
