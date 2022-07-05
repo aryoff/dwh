@@ -19,7 +19,7 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
             $API = new ApiController();
             $API->cronLogInputInteraction();
-        })->everyMinute()->withoutOverlapping();
+        })->name('cronFailedInputInteraction')->withoutOverlapping()->everyMinute();
     }
 
     /**
