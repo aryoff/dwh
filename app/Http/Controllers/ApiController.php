@@ -126,6 +126,22 @@ class ApiController extends Controller
         $response->partnerDataId = $partnerDataId;
         return $response;
     }
+    function cronLogInputInteraction()
+    {
+        $query = DB::select("SELECT id,data FROM dwh_failed_inputs WHERE input_type=?", ['interaction']);
+        foreach ($query as $row) {
+            $request = json_decode($row->data);
+            $id = $request->dwh_source_id;
+            $log_time = $request->log_time;
+            unset($request->dwh_source_id);
+            unset($request->err_field);
+            unset($request->log_time);
+            $source = DB::select("SELECT parameter->'field' AS parameter,dwh_partner_id FROM dwh_sources WHERE id = :id", ['id' => $id]);
+            if ($this->executeInputInteraction($source, $request, $id)) {
+                DB::delete("DELETE FROM dwh_failed_inputs WHERE id=?", [$row->id]);
+            }
+        }
+    }
     function executeInputInteraction($source, $request, $id)
     {
         $parameter = json_decode($source[0]->parameter);
@@ -170,10 +186,12 @@ class ApiController extends Controller
                 }
                 Storage::append(FAILEDINPUTINTERACTIONLOG, json_encode($inputData));
             }
+            return true;
         } catch (QueryException $qe) {
             $inputData->dwh_source_id = $id;
             $inputData->error = 'User ID Failed ' . $customerId;
             Storage::append(FAILEDINPUTINTERACTIONLOG, json_encode($inputData));
+            return false;
         }
     }
     function checkAndAssign(object $container, object $parameter, string $category, array $successField, string $inputKey, $inputValue)
@@ -228,11 +246,13 @@ class ApiController extends Controller
             if (count($errField) > 0) {
                 $inputData->dwh_source_id = $id;
                 $inputData->err_field = $errField;
-                Storage::append(FAILEDINPUTINTERACTIONLOG, json_encode($inputData));
+                $inputData->log_time = date('Y-m-d H:i:s');
+                $this->failedInputLog('interaction', $inputData);
             }
         } catch (Exception $fieldMismatchErr) { //kalau field nya ada yg salah, maka akan masuk ke dump failed
             $inputData->dwh_source_id = $id;
-            Storage::append(FAILEDINPUTINTERACTIONLOG, json_encode($inputData));
+            $inputData->log_time = date('Y-m-d H:i:s');
+            $this->failedInputLog('interaction', $inputData);
         }
         $response->insertData = $insertData;
         $response->customerData = $customerData;
@@ -243,6 +263,10 @@ class ApiController extends Controller
         $response->inputData = $inputData;
         $response->employee = $employee;
         return $response;
+    }
+    function failedInputLog(string $type, object $data)
+    {
+        return DB::insert("INSERT INTO dwh_failed_inputs(input_type,data) VALUES (:itype,:data)", ['itype' => $type, 'data' => json_encode($data)]);
     }
     public function ApiInputPartnerData(Request $request)
     {
