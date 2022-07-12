@@ -76,13 +76,15 @@ class ApiController extends Controller
         switch (count($possibleCustomerId)) {
             case 0:
                 # user tidak ditemukan
-                $first = true;
-                foreach ($contactTypeList as $value) {
-                    if ($first) { //bikin data customer baru
-                        $customerId = DB::select("INSERT INTO dwh_customers(name) VALUES (?) RETURNING id", [$customerData->nama])[0]->id;
-                        $first = false;
+                if (property_exists($customerData, 'nama')) { //harus ada nama customer nya
+                    $first = true;
+                    foreach ($contactTypeList as $value) {
+                        if ($first) { //bikin data customer baru
+                            $customerId = DB::select("INSERT INTO dwh_customers(name) VALUES (?) RETURNING id", [$customerData->nama])[0]->id;
+                            $first = false;
+                        }
+                        DB::insert("INSERT INTO dwh_customer_contacts(dwh_customer_id,dwh_customer_contact_type_id,value) VALUES ($customerId,:tid,:val)", ['tid' => $value->id, 'val' => $customerData->{$value->name}]);
                     }
-                    DB::insert("INSERT INTO dwh_customer_contacts(dwh_customer_id,dwh_customer_contact_type_id,value) VALUES ($customerId,:tid,:val)", ['tid' => $value->id, 'val' => $customerData->{$value->name}]);
                 }
                 break;
             case 1:
