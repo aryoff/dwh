@@ -151,6 +151,11 @@ class ApiController extends Controller
         //fields convertion
         $response = $this->convertDataInputInteraction($parameter, $request, $id);
         $customerData = $response->customerData;
+        if (property_exists($customerData, 'channel_type') && property_exists($customerData, 'channel_account')) {
+            $customerData->{$customerData->channel_type} = $customerData->channel_account;
+            unset($customerData->channel_type);
+            unset($customerData->channel_account);
+        }
         $partner = $response->partner;
         $partnerData = $response->partnerData;
         $interactionData = $response->interactionData;
