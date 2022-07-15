@@ -254,7 +254,7 @@ class ApiController extends Controller
                 }
             }
             if (property_exists($parameter, 'ignore')) {
-                $errField = array_diff($errField, $parameter->ignore);
+                $errField = array_diff($errField, (array) $parameter->ignore);
             }
             if (count($errField) > 0) {
                 $inputData->dwh_source_id = $id;
